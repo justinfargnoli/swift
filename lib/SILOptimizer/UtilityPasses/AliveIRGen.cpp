@@ -10,7 +10,13 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "swift/AST/IRGenOptions.h"
+#include "swift/AST/IRGenRequests.h"
+#include "swift/Basic/PrimarySpecificPaths.h"
+#include "swift/SIL/SILModule.h"
 #include "swift/SILOptimizer/PassManager/Transforms.h"
+#include "swift/Subsystems.h"
+#include "swift/TBDGen/TBDGen.h"
 
 using namespace swift;
 
@@ -18,26 +24,34 @@ namespace {
 
 class AliveIRGen : public SILModuleTransform {
   void run() override {
-    // Taken from \c SimplifyUnreachableContainingBlocks.
-    //
-    // // For each block...
-    // for (auto &BB : *getFunction()) {
-    //   // If the block does not contain an unreachable, just continue. There is
-    //   // no further work to do.
-    //   auto *UI = dyn_cast<UnreachableInst>(BB.getTerminator());
-    //   if (!UI)
-    //     continue;
+    llvm::errs() << "\tBegin AliveIRGen\n"; // TODO remove
 
-    //   // Otherwise, eliminate all other instructions in the block.
-    //   for (auto II = BB.begin(); &*II != UI;) {
-    //     // Avoid iterator invalidation.
-    //     auto *I = &*II;
-    //     ++II;
+    // Generate LLLVM IR for the SILModule
+    std::unique_ptr<SILModule> SILMod(getModule());
+    TBDGenOptions TBDGenOpts{};
+    IRGenOptions IRGenOpts{};
+    PrimarySpecificPaths primarySpecificPaths{};
+    llvm::GlobalVariable *HashGlobal;
 
-    //     I->replaceAllUsesOfAllResultsWithUndef();
-    //     I->eraseFromParent();
-    //   }
-    // }
+    GeneratedModule generatedModule = performIRGeneration(
+        SILMod->getSwiftModule(), IRGenOpts, TBDGenOpts, std::move(SILMod),
+        /*ModuleName=*/ "", primarySpecificPaths,
+        /*parallelOutputFilenames=*/ {}, &HashGlobal);
+        
+    llvm::Module *mod = generatedModule.getModule();
+
+    // The version of this tool that translated SIL to Alive IR directly 
+    // will be a \c SILFunctionTransform instead of a \c SILModuleTransform.
+    // So, for simplicity, only consider the first function.
+    llvm::Function *function = &*mod->begin();
+
+    // Lower LLVM IR to Alive IR
+    // TODO
+
+    // Store Alive IR in ASTContext
+    // TODO
+
+    llvm::errs() << "\tDone AliveIRGen\n"; // TODO remove
   }
 };
 
