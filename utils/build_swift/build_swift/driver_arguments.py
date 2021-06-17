@@ -49,6 +49,9 @@ def _apply_default_arguments(args):
     """Preprocess argument namespace to apply default behaviors.
     """
 
+    # Always build alive
+    args.build_alive = True
+
     # Build cmark if any cmark-related options were specified.
     if (args.cmark_build_variant is not None):
         args.build_cmark = True
@@ -1199,6 +1202,8 @@ def create_argument_parser():
            help='skip building llvm')
     option('--skip-build-swift', toggle_false('build_swift'),
            help='skip building swift')
+    option('--skip-build-alive', toggle_false('build_alive'),
+           help='skip building alive')
 
     # We need to list --skip-test-swift explicitly because otherwise argparse
     # will auto-expand arguments like --skip-test-swift to the only known
