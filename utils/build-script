@@ -627,7 +627,9 @@ class BuildScriptInvocation(object):
             (args.build_llbuild, "llbuild"),
             (args.build_libcxx, "libcxx"),
             (args.build_libdispatch, "libdispatch"),
-            (args.build_libicu, "libicu")
+            (args.build_libicu, "libicu"),
+            (args.build_alive, "z3"),
+            (args.build_alive, "alive"),
         ]
         for (should_build, string_name) in conditional_subproject_configs:
             if not should_build and not self.args.infer_dependencies:
@@ -891,6 +893,10 @@ class BuildScriptInvocation(object):
 
         if self.args.build_cmark:
             before_impl_product_classes.append(products.CMark)
+
+        if self.args.build_alive:
+            before_impl_product_classes.append(products.Z3)
+            before_impl_product_classes.append(products.Alive)
 
         # FIXME: This is a weird division (returning a list of class objects),
         # but it matches the existing structure of the `build-script-impl`.

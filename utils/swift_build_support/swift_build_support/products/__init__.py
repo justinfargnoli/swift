@@ -10,6 +10,7 @@
 #
 # ----------------------------------------------------------------------------
 
+from .alive import Alive
 from .benchmarks import Benchmarks
 from .cmark import CMark
 from .earlyswiftdriver import EarlySwiftDriver
@@ -34,6 +35,7 @@ from .swiftpm import SwiftPM
 from .swiftsyntax import SwiftSyntax
 from .tsan_libdispatch import TSanLibDispatch
 from .xctest import XCTest
+from .z3 import Z3
 
 __all__ = [
     'CMark',

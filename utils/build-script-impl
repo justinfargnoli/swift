@@ -1209,6 +1209,8 @@ LIBDISPATCH_SOURCE_DIR="${WORKSPACE}/swift-corelibs-libdispatch"
 LIBDISPATCH_STATIC_SOURCE_DIR="${WORKSPACE}/swift-corelibs-libdispatch"
 LIBICU_SOURCE_DIR="${WORKSPACE}/icu"
 LIBCXX_SOURCE_DIR="${WORKSPACE}/llvm-project/libcxx"
+Z3_SOURCE_DIR="${WORKSPACE}/z3"
+ALIVE_SOURCE_DIR="${WORKSPACE}/alive"
 
 # We cannot currently apply the normal rules of skipping here for LLVM. Even if
 # we are skipping building LLVM, we still need to at least build a few tools
@@ -1970,6 +1972,14 @@ for host in "${ALL_HOSTS[@]}"; do
                     -DSWIFT_PATH_TO_LIBDISPATCH_SOURCE:PATH="${LIBDISPATCH_SOURCE_DIR}"
                     -DSWIFT_PATH_TO_LIBDISPATCH_BUILD:PATH="$(build_directory ${host} libdispatch)"
                     -DSWIFT_PATH_TO_LIBDISPATCH_STATIC_BUILD:PATH="$(build_directory ${host} libdispatch_static)"
+                )
+
+                cmake_options=(
+                    "${cmake_options[@]}"
+                    -DSWIFT_PATH_TO_Z3_SOURCE:PATH="${Z3_SOURCE_DIR}"
+                    -DSWIFT_PATH_TO_Z3_BUILD:PATH="$(build_directory ${host} z3)"
+                    -DSWIFT_PATH_TO_ALIVE_SOURCE:PATH="${ALIVE_SOURCE_DIR}"
+                    -DSWIFT_PATH_TO_ALIVE_BUILD:PATH="$(build_directory ${host} alive)"
                 )
 
                 if [[ ! "${SKIP_BUILD_LIBICU}" ]] ; then
