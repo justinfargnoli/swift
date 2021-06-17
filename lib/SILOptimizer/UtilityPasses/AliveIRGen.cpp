@@ -37,7 +37,7 @@ class AliveIRGen : public SILModuleTransform {
         SILMod->getSwiftModule(), IRGenOpts, TBDGenOpts, std::move(SILMod),
         /*ModuleName=*/ "", primarySpecificPaths,
         /*parallelOutputFilenames=*/ {}, &HashGlobal);
-        
+
     llvm::Module *mod = generatedModule.getModule();
 
     // The version of this tool that translated SIL to Alive IR directly 
