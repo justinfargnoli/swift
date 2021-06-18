@@ -1632,7 +1632,7 @@ Identifier GenericTypeParamType::getName() const {
   llvm::SmallString<10> nameBuf;
   llvm::raw_svector_ostream os(nameBuf);
 
-  static const char *tau = u8"\u03C4_";
+  static const char8_t *tau = u8"\u03C4_";
   
   os << tau << getDepth() << '_' << getIndex();
   Identifier name = C.getIdentifier(os.str());

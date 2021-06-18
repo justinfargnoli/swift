@@ -13,3 +13,4 @@
 // DO NOT MODIFY THIS FILE!
 // The SILAlive library is split into sub-components, modify the respective
 // sub-component.
+#include "ir/instr.h"

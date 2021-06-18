@@ -15,6 +15,7 @@ from build_swift.build_swift.wrappers import xcrun
 from . import cmake_product
 from . import earlyswiftdriver
 import os
+import shutil
 
 class Alive(cmake_product.CMakeProduct):
     @classmethod
@@ -83,6 +84,18 @@ class Alive(cmake_product.CMakeProduct):
         self.cmake_options.define('Z3_LIBRARIES', '%s' %
                 os.path.join(os.path.dirname(self.build_dir), 'z3-macosx-x86_64', 'libz3.dylib')) 
         self.build_with_cmake(["all"], self.args.swift_build_variant, [])
+
+        print('--- Copying Alive headers into a known location')
+        include_dir = os.path.join(self.build_dir, 'include', 'alive2')
+        if not os.path.exists(include_dir):
+          os.makedirs(include_dir)
+          for api_dir in [ 'ir', 'llvm_util', 'smt', 'util', 'tools' ]:
+            os.mkdir(os.path.join(include_dir, api_dir))
+            full_dir = os.path.join(self.source_dir, api_dir)
+            for file in os.listdir(full_dir):
+              if file.endswith('.h'):
+                print('found header %s' % file)
+                shutil.copy2(os.path.join(full_dir, file), os.path.join(include_dir, api_dir))
 
     def should_test(self, host_target):
         """should_test() -> Bool
