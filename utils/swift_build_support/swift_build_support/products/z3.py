@@ -1,4 +1,4 @@
-# swift_build_support/products/alive.py -------------------------*- python -*-
+# swift_build_support/products/z3.py -------------------------*- python -*-
 #
 # This source file is part of the Swift.org open source project
 #
