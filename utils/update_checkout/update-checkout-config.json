@@ -52,7 +52,11 @@
         "swift-format": {
             "remote": { "id": "apple/swift-format" } },
         "llvm-project": {
-            "remote": { "id": "apple/llvm-project" } }
+            "remote": { "id": "apple/llvm-project" } },
+        "z3": {
+            "remote": { "id": "Z3Prover/z3" } },
+        "alive2": {
+            "remote": { "id": "justinfargnoli/alive2" } }
     },
     "default-branch-scheme": "main",
     "branch-schemes": {
@@ -81,7 +85,9 @@
                 "cmake": "v3.19.6",
                 "indexstore-db": "main",
                 "sourcekit-lsp": "main",
-                "swift-format": "main"
+                "swift-format": "main",
+                "z3": "4.8.10",
+                "alive2": "main"
             }
         },
        "release/5.5": {
