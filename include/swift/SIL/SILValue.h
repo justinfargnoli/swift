@@ -685,7 +685,7 @@ public:
   bool satisfiedBy(const Operand *use) const;
 
   bool satisfiesConstraint(ValueOwnershipKind testKind) const {
-    return ownershipKind.join(testKind) == testKind;
+    return ValueOwnershipKind{ownershipKind.join(testKind)} == testKind;
   }
 
   bool operator==(const OwnershipConstraint &other) const {

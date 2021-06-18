@@ -300,11 +300,11 @@ std::string ASTPrinter::sanitizeUtf8(StringRef Text) {
   Builder.reserve(Text.size());
   const llvm::UTF8* Data = reinterpret_cast<const llvm::UTF8*>(Text.begin());
   const llvm::UTF8* End = reinterpret_cast<const llvm::UTF8*>(Text.end());
-  StringRef Replacement = u8"\ufffd";
+//  static const char8_t *Replacement = u8"\ufffd";
   while (Data < End) {
     auto Step = llvm::getNumBytesForUTF8(*Data);
     if (Data + Step > End) {
-      Builder.append(Replacement);
+      Builder.append("�");
       break;
     }
 
@@ -313,7 +313,7 @@ std::string ASTPrinter::sanitizeUtf8(StringRef Text) {
     } else {
 
       // If malformed, add replacement characters.
-      Builder.append(Replacement);
+      Builder.append("�");
     }
     Data += Step;
   }

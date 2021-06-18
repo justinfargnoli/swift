@@ -1210,7 +1210,7 @@ LIBDISPATCH_STATIC_SOURCE_DIR="${WORKSPACE}/swift-corelibs-libdispatch"
 LIBICU_SOURCE_DIR="${WORKSPACE}/icu"
 LIBCXX_SOURCE_DIR="${WORKSPACE}/llvm-project/libcxx"
 Z3_SOURCE_DIR="${WORKSPACE}/z3"
-ALIVE_SOURCE_DIR="${WORKSPACE}/alive"
+ALIVE_SOURCE_DIR="${WORKSPACE}/alive2"
 
 # We cannot currently apply the normal rules of skipping here for LLVM. Even if
 # we are skipping building LLVM, we still need to at least build a few tools

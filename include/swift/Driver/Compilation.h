@@ -95,6 +95,13 @@ public:
     Result(Result &&) = default;
     Result &operator=(Result &&) = default;
 
+    Result(bool abnormalExit, int exitCode,
+           fine_grained_dependencies::ModuleDepGraph depGraph)
+      : hadAbnormalExit(abnormalExit), exitCode(exitCode), depGraph(depGraph)
+    {
+
+    }
+
     /// Construct a \c Compilation::Result from just an exit code.
     static Result code(int code) {
       return Compilation::Result{false, code,

@@ -22,7 +22,7 @@ if(NOT TARGET libcmark_static AND EXISTS ${CMARK_TARGETS_FILE})
   include(${CMARK_TARGETS_FILE})
 endif()
 
-set(Z3_TARGETS_FILE @SWIFT_PATH_TO_Z3_BUILD@/src/z3Targets.cmake)
+set(Z3_TARGETS_FILE @SWIFT_PATH_TO_Z3_BUILD@/src/Z3Targets.cmake)
 if(EXISTS ${Z3_TARGETS_FILE})
   include(${Z3_TARGETS_FILE})
 endif()

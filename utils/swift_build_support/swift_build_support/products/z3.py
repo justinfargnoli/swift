@@ -14,7 +14,7 @@ from build_swift.build_swift.wrappers import xcrun
 
 from . import cmake_product
 from . import earlyswiftdriver
-
+import os
 
 class Z3(cmake_product.CMakeProduct):
     @classmethod
@@ -76,7 +76,20 @@ class Z3(cmake_product.CMakeProduct):
                                       cmake_osx_deployment_target)
             self.cmake_options.define('CMAKE_OSX_ARCHITECTURES', arch)
 
+        self.cmake_options.define('CMAKE_INSTALL_PREFIX', self.build_dir)
+        self.cmake_options.define('CMAKE_INSTALL_INCLUDEDIR', 'include')
         self.build_with_cmake(["all"], self.args.swift_build_variant, [])
+
+        print('--- Symlinking Z3 headers into a known location')
+        api_dir = os.path.join(self.source_dir, 'src', 'api')
+        include_dir = os.path.join(self.build_dir, 'include')
+        if not os.path.exists(include_dir):
+          os.symlink(api_dir, include_dir)
+
+        z3_version_path = os.path.join(self.build_dir, 'src', 'util', 'z3_version.h')
+        z3_version_dest_path = os.path.join(self.source_dir, 'src', 'api', 'z3_version.h')
+        if not os.path.exists(z3_version_dest_path):
+          os.popen('cp {} {}'.format(z3_version_path, z3_version_dest_path))
 
     def should_test(self, host_target):
         """should_test() -> Bool
@@ -107,3 +120,4 @@ class Z3(cmake_product.CMakeProduct):
         destination directory.
         """
         self.install_with_cmake(["install"], self.host_install_destdir(host_target))
+        
