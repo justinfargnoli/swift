@@ -56,7 +56,7 @@
         "z3": {
             "remote": { "id": "Z3Prover/z3" } },
         "alive2": {
-            "remote": { "id": "justinfargnoli/alive2" } }
+            "remote": { "id": "justinfargnoli/alive" } }
     },
     "default-branch-scheme": "main",
     "branch-schemes": {
