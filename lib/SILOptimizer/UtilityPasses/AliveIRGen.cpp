@@ -23,11 +23,7 @@ using namespace swift;
 namespace {
 
 class AliveIRGen : public SILModuleTransform {
-  void run() override {
-    llvm::errs() << "\tBegin AliveIRGen\n"; // TODO remove
-
-    // Generate LLLVM IR for the SILModule
-    std::unique_ptr<SILModule> SILMod(getModule());
+  llvm::Module *genIR(std::unique_ptr<SILModule> SILMod) {
     TBDGenOptions TBDGenOpts{};
     IRGenOptions IRGenOpts{};
     PrimarySpecificPaths primarySpecificPaths{};
@@ -38,12 +34,29 @@ class AliveIRGen : public SILModuleTransform {
         /*ModuleName=*/ "", primarySpecificPaths,
         /*parallelOutputFilenames=*/ {}, &HashGlobal);
 
-    llvm::Module *mod = generatedModule.getModule();
+    return generatedModule.getModule();
+  }
+
+  void run() override {
+    llvm::errs() << "\tBegin AliveIRGen\n"; // TODO remove
+
+    std::unique_ptr<SILModule> SILMod(getModule());
+    if (SILMod->getStage() != SILStage::Lowered) {
+      llvm::errs() << "\tERROR: Input SIL is not in the \"Lowered\" Stage.\n";
+      return;
+    }
+
+    // Generate LLLVM IR for the SILModule
+    llvm::Module *IRMod = genIR(std::move(SILMod));
+    if (IRMod == nullptr) {
+      return;
+    }
+    IRMod->dump(); // TODO remove
 
     // The version of this tool that translated SIL to Alive IR directly 
     // will be a \c SILFunctionTransform instead of a \c SILModuleTransform.
     // So, for simplicity, only consider the first function.
-    llvm::Function *function = &*mod->begin();
+    llvm::Function *function = IRMod->getFunction("");
 
     // Lower LLVM IR to Alive IR
     // TODO
