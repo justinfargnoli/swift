@@ -45,6 +45,7 @@ class AliveIRGen : public SILModuleTransform {
       llvm::errs() << "\tERROR: Input SIL is not in the \"Lowered\" Stage.\n";
       return;
     }
+    SILMod->dump();
 
     // Generate LLLVM IR for the SILModule
     llvm::Module *IRMod = genIR(std::move(SILMod));
