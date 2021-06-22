@@ -1004,7 +1004,8 @@ public:
 
   /// Parse the optional modifiers before a declaration.
   bool parseDeclModifierList(DeclAttributes &Attributes, SourceLoc &StaticLoc,
-                             StaticSpellingKind &StaticSpelling);
+                             StaticSpellingKind &StaticSpelling,
+                             bool isFromClangAttribute = false);
 
   /// Parse an availability attribute of the form
   /// @available(*, introduced: 1.0, deprecated: 3.1).
@@ -1253,7 +1254,7 @@ public:
                                          const TypeAttributes &attrs);
   
   ParserResult<TypeRepr> parseTypeTupleBody();
-  ParserResult<TypeRepr> parseTypeArray(TypeRepr *Base);
+  ParserResult<TypeRepr> parseTypeArray(ParserResult<TypeRepr> Base);
 
   /// Parse a collection type.
   ///   type-simple:
@@ -1261,9 +1262,10 @@ public:
   ///     '[' type ':' type ']'
   ParserResult<TypeRepr> parseTypeCollection();
 
-  ParserResult<TypeRepr> parseTypeOptional(TypeRepr *Base);
+  ParserResult<TypeRepr> parseTypeOptional(ParserResult<TypeRepr> Base);
 
-  ParserResult<TypeRepr> parseTypeImplicitlyUnwrappedOptional(TypeRepr *Base);
+  ParserResult<TypeRepr>
+  parseTypeImplicitlyUnwrappedOptional(ParserResult<TypeRepr> Base);
 
   bool isOptionalToken(const Token &T) const;
   SourceLoc consumeOptionalToken();

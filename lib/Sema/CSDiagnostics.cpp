@@ -3252,7 +3252,8 @@ bool MissingCallFailure::diagnoseAsError() {
     switch (last.getKind()) {
     case ConstraintLocator::ContextualType:
     case ConstraintLocator::ApplyArgToParam: {
-      auto fnType = getType(anchor)->castTo<FunctionType>();
+      auto type = getType(anchor)->lookThroughAllOptionalTypes();
+      auto fnType = type->castTo<FunctionType>();
       emitDiagnostic(diag::missing_nullary_call, fnType->getResult())
           .fixItInsertAfter(insertLoc, "()");
       return true;
@@ -7432,9 +7433,15 @@ bool InvalidMemberRefOnProtocolMetatype::diagnoseAsError() {
   if (auto *whereClause = extension->getTrailingWhereClause()) {
     auto sourceRange = whereClause->getSourceRange();
     note.fixItInsertAfter(sourceRange.End, ", Self == <#Type#> ");
-  } else {
-    auto nameRepr = extension->getExtendedTypeRepr();
-    note.fixItInsertAfter(nameRepr->getEndLoc(), " where Self == <#Type#>");
+  } else if (auto nameRepr = extension->getExtendedTypeRepr()) {
+    // Type repr is not always available so we need to be defensive
+    // about its presence and validity.
+    if (nameRepr->isInvalid())
+      return true;
+
+    if (auto noteLoc = nameRepr->getEndLoc()) {
+      note.fixItInsertAfter(noteLoc, " where Self == <#Type#>");
+    }
   }
 
   return true;

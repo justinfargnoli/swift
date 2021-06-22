@@ -70,7 +70,7 @@ public func withTaskGroup<ChildTaskResult, GroupResult>(
 ) async -> GroupResult {
   #if compiler(>=5.5) && $BuiltinTaskGroup
 
-  let _group = Builtin.createTaskGroup()
+  let _group = Builtin.createTaskGroup(ChildTaskResult.self)
   var group = TaskGroup<ChildTaskResult>(group: _group)
 
   // Run the withTaskGroup body.
@@ -149,7 +149,7 @@ public func withThrowingTaskGroup<ChildTaskResult, GroupResult>(
 ) async rethrows -> GroupResult {
   #if compiler(>=5.5) && $BuiltinTaskGroup
 
-  let _group = Builtin.createTaskGroup()
+  let _group = Builtin.createTaskGroup(ChildTaskResult.self)
   var group = ThrowingTaskGroup<ChildTaskResult, Error>(group: _group)
 
   do {
@@ -223,7 +223,7 @@ public struct TaskGroup<ChildTaskResult> {
 
     // Create the asynchronous task future.
     let (childTask, _) = Builtin.createAsyncTaskGroupFuture(
-      Int(flags.bits), _group, operation)
+      Int(flags.bits), _group, /*options*/nil, operation)
 
     // Attach it to the group's task record in the current task.
     _taskGroupAttachChild(group: _group, child: childTask)
@@ -268,7 +268,7 @@ public struct TaskGroup<ChildTaskResult> {
 
     // Create the asynchronous task future.
     let (childTask, _) = Builtin.createAsyncTaskGroupFuture(
-      Int(flags.bits), _group, operation)
+      Int(flags.bits), _group, /*options*/nil, operation)
 
     // Attach it to the group's task record in the current task.
     _taskGroupAttachChild(group: _group, child: childTask)
@@ -466,7 +466,7 @@ public struct ThrowingTaskGroup<ChildTaskResult, Failure: Error> {
 
     // Create the asynchronous task future.
     let (childTask, _) = Builtin.createAsyncTaskGroupFuture(
-      Int(flags.bits), _group, operation)
+      Int(flags.bits), _group, /*options*/nil, operation)
 
     // Attach it to the group's task record in the current task.
     _taskGroupAttachChild(group: _group, child: childTask)
@@ -511,7 +511,7 @@ public struct ThrowingTaskGroup<ChildTaskResult, Failure: Error> {
 
     // Create the asynchronous task future.
     let (childTask, _) = Builtin.createAsyncTaskGroupFuture(
-      Int(flags.bits), _group, operation)
+      Int(flags.bits), _group, /*options*/nil, operation)
 
     // Attach it to the group's task record in the current task.
     _taskGroupAttachChild(group: _group, child: childTask)
