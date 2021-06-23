@@ -14,6 +14,7 @@
 #include "swift/AST/IRGenRequests.h"
 #include "swift/Basic/PrimarySpecificPaths.h"
 #include "swift/SIL/SILModule.h"
+#include "swift/SILOptimizer/PassManager/Passes.h"
 #include "swift/SILOptimizer/PassManager/Transforms.h"
 #include "swift/Subsystems.h"
 #include "swift/TBDGen/TBDGen.h"
@@ -34,38 +35,47 @@ class AliveIRGen : public SILModuleTransform {
         /*ModuleName=*/ "", primarySpecificPaths,
         /*parallelOutputFilenames=*/ {}, &HashGlobal);
 
+    // TODO: Remove
+    llvm::errs() << "\n- BEFORE performIRGeneration dump\n";
+    generatedModule.getModule()->dump();
+    llvm::errs() << "\n- AFTER performIRGeneration dump\n";
+
     return generatedModule.getModule();
   }
 
   void run() override {
-    llvm::errs() << "\tBegin AliveIRGen\n"; // TODO remove
-
     std::unique_ptr<SILModule> SILMod(getModule());
-    if (SILMod->getStage() != SILStage::Lowered) {
-      llvm::errs() << "\tERROR: Input SIL is not in the \"Lowered\" Stage.\n";
-      return;
+
+    switch (SILMod->getStage()) {
+    case SILStage::Raw:
+      assert(!runSILDiagnosticPasses(*SILMod.get()));
+      SWIFT_FALLTHROUGH;
+    case SILStage::Canonical:
+      runSILLoweringPasses(*SILMod.get());
+      break;
+    case SILStage::Lowered:
+      break;
     }
-    SILMod->dump();
 
     // Generate LLLVM IR for the SILModule
     llvm::Module *IRMod = genIR(std::move(SILMod));
-    if (IRMod == nullptr) {
-      return;
-    }
+    assert(IRMod && "IR module generation failed.");
+
+    // TODO: Remove
+    llvm::errs() << "\n- BEFORE dump\n";
     IRMod->dump(); // TODO remove
+    llvm::errs() << "\n- AFTER dump\n";
 
     // The version of this tool that translated SIL to Alive IR directly 
     // will be a \c SILFunctionTransform instead of a \c SILModuleTransform.
     // So, for simplicity, only consider the first function.
-    llvm::Function *function = IRMod->getFunction("");
+    llvm::Function *function = IRMod->getFunction("main");
 
     // Lower LLVM IR to Alive IR
     // TODO
 
     // Store Alive IR in ASTContext
     // TODO
-
-    llvm::errs() << "\tDone AliveIRGen\n"; // TODO remove
   }
 };
 
