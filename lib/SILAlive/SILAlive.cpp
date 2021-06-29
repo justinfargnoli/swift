@@ -47,8 +47,8 @@ GeneratedModule genIR(std::unique_ptr<SILModule> SILMod) {
   // Generate LLVM IR for the \p SILMod
   llvm::GlobalVariable *HashGlobal;
   return performIRGeneration(
-      SILMod->getSwiftModule(), IRGenOptions{}, TBDGenOptions{}, std::move(SILMod),
-      /*ModuleName=*/ "", PrimarySpecificPaths{},
+      SILMod->getSwiftModule(), IRGenOptions{}, TBDGenOptions{}, 
+      std::move(SILMod), /*ModuleName=*/ "", PrimarySpecificPaths{},
       /*parallelOutputFilenames=*/ {}, &HashGlobal);
 }
 
