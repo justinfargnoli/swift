@@ -248,8 +248,6 @@ components=(
   static-libdispatch
   swift
   xctest
-  z3
-  alive
 )
 for component in ${components[@]} ; do
   component_skip_test_default=""
