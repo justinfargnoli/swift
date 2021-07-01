@@ -1269,7 +1269,7 @@ void Remangler::mangleBuiltinTypeName(Node *node, unsigned depth) {
     auto element = text.substr(splitIdx).substr(1);
     if (element == "RawPointer") {
       Buffer << 'p';
-    } else if (stripPrefix(element, "Float")) {
+    } else if (stripPrefix(element, "FPIEEE")) {
       Buffer << 'f' << element << '_';
     } else if (stripPrefix(element, "Int")) {
       Buffer << 'i' << element << '_';
@@ -1930,7 +1930,7 @@ void Remangler::mangleAnyNominalType(Node *node, EntityContext &ctx,
 
   switch (node->getKind()) {
   case Node::Kind::Type:
-    mangleAnyNominalType(node->getChild(0), ctx);
+    mangleAnyNominalType(node->getChild(0), ctx, depth + 1);
     break;
   case Node::Kind::OtherNominalType:
     // Mangle unknown type kinds as structures since we can't change the old
