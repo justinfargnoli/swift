@@ -626,7 +626,7 @@ class BuildScriptInvocation(object):
             (args.build_libdispatch, "libdispatch"),
             (args.build_libicu, "libicu"),
             (args.build_alive, "z3"),
-            (args.build_alive, "alive2"),
+            (args.build_alive, "alive"),
         ]
         for (should_build, string_name) in conditional_subproject_configs:
             if not should_build and not self.args.infer_dependencies:

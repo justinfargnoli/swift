@@ -14,7 +14,6 @@ from build_swift.build_swift.wrappers import xcrun
 
 from . import cmake_product
 from . import earlyswiftdriver
-from . import llvm
 from . import z3
 import os
 import shutil
@@ -39,7 +38,7 @@ class Alive(cmake_product.CMakeProduct):
     # EarlySwiftDriver is the root of the graph
     @classmethod
     def get_dependencies(cls):
-        return [earlyswiftdriver.EarlySwiftDriver, llvm.LLVM, z3.Z3]
+        return [earlyswiftdriver.EarlySwiftDriver, z3.Z3]
 
     def should_build(self, host_target):
         """should_build() -> Bool
@@ -79,9 +78,6 @@ class Alive(cmake_product.CMakeProduct):
             self.cmake_options.define('CMAKE_OSX_ARCHITECTURES', arch)
 
         self.cmake_options.define('BUILD_TV', '0')
-        self.cmake_options.define('BUILD_LLVM_UTILS', '1')
-        self.cmake_options.define('LLVM_DIR', '%s' %
-                os.path.join(os.path.dirname(self.build_dir), 'llvm-macosx-x86_64', 'cmake', 'modules', 'CMakeFiles'))
         self.cmake_options.define('Z3_INCLUDE_DIR', 
                 os.path.join(os.path.dirname(self.build_dir), 'z3-macosx-x86_64', 'include'))
         # FIXME: Don't hardcode x86 here.
@@ -129,4 +125,4 @@ class Alive(cmake_product.CMakeProduct):
         This phase might copy the artifacts from the previous phases into a
         destination directory.
         """
-        self.install_with_cmake(["install"], self.host_install_destdir(host_target))
+        # self.install_with_cmake(["install"], self.host_install_destdir(host_target))
