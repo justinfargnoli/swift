@@ -19,7 +19,9 @@ namespace {
 
 class AliveIRGen : public SILModuleTransform {
   void run() override { 
-    assert(!SILAliveLLVM(getModule())); }
+    auto result = SILAliveLLVM(getModule(); 
+    assert(!result); 
+  }
 };
 
 } // end anonymous namespace
