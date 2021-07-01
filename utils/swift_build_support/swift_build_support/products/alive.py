@@ -81,7 +81,7 @@ class Alive(cmake_product.CMakeProduct):
         self.cmake_options.define('BUILD_TV', '0')
         self.cmake_options.define('BUILD_LLVM_UTILS', '1')
         self.cmake_options.define('LLVM_DIR', '%s' %
-                os.path.join(os.path.dirname(self.build_dir), 'llvm-macosx-x86_64', 'camke', 'modules', 'CMakeFiles'))
+                os.path.join(os.path.dirname(self.build_dir), 'llvm-macosx-x86_64', 'cmake', 'modules', 'CMakeFiles'))
         self.cmake_options.define('Z3_INCLUDE_DIR', 
                 os.path.join(os.path.dirname(self.build_dir), 'z3-macosx-x86_64', 'include'))
         # FIXME: Don't hardcode x86 here.
