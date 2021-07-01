@@ -2483,6 +2483,10 @@ bool swift::conflicting(const OverloadSignature& sig1,
   if (sig1.IsInstanceMember != sig2.IsInstanceMember)
     return false;
 
+  // If one is an async function and the other is not, they can't conflict.
+  if (sig1.IsAsyncFunction != sig2.IsAsyncFunction)
+    return false;
+
   // If one is a compound name and the other is not, they do not conflict
   // if one is a property and the other is a non-nullary function.
   if (sig1.Name.isCompoundName() != sig2.Name.isCompoundName()) {
@@ -2709,7 +2713,6 @@ OverloadSignature ValueDecl::getOverloadSignature() const {
     = static_cast<bool>(getDeclContext()->getExtendedProtocolDecl());
   signature.IsInstanceMember = isInstanceMember();
   signature.IsVariable = isa<VarDecl>(this);
-  signature.IsFunction = isa<AbstractFunctionDecl>(this);
   signature.IsEnumElement = isa<EnumElementDecl>(this);
   signature.IsNominal = isa<NominalTypeDecl>(this);
   signature.IsTypeAlias = isa<TypeAliasDecl>(this);
@@ -2721,6 +2724,13 @@ OverloadSignature ValueDecl::getOverloadSignature() const {
     if (func->isUnaryOperator()) {
       signature.UnaryOperator = func->getAttrs().getUnaryOperatorKind();
     }
+  }
+
+  // Functions include async/not-async.
+  if (auto func = dyn_cast<AbstractFunctionDecl>(this)) {
+    signature.IsFunction = true;
+    if (func->hasAsync())
+      signature.IsAsyncFunction = true;
   }
 
   if (auto *extension = dyn_cast<ExtensionDecl>(getDeclContext()))
@@ -2856,6 +2866,23 @@ void ValueDecl::setIsObjC(bool value) {
 
   LazySemanticInfo.isObjCComputed = true;
   LazySemanticInfo.isObjC = value;
+}
+
+bool ValueDecl::isSemanticallyFinal() const {
+  // Actor types are semantically final.
+  if (auto classDecl = dyn_cast<ClassDecl>(this)) {
+    if (classDecl->isActor())
+      return true;
+  }
+
+  // As are members of actor types.
+  if (auto classDecl = getDeclContext()->getSelfClassDecl()) {
+    if (classDecl->isActor())
+      return true;
+  }
+
+  // For everything else, the same as 'final'.
+  return isFinal();
 }
 
 bool ValueDecl::isFinal() const {
@@ -3202,13 +3229,13 @@ bool ValueDecl::shouldHideFromEditor() const {
 static AccessLevel getMaximallyOpenAccessFor(const ValueDecl *decl) {
   // Non-final classes are considered open to @testable importers.
   if (auto cls = dyn_cast<ClassDecl>(decl)) {
-    if (!cls->isFinal())
+    if (!cls->isSemanticallyFinal())
       return AccessLevel::Open;
 
   // Non-final overridable class members are considered open to
   // @testable importers.
   } else if (decl->isPotentiallyOverridable()) {
-    if (!cast<ValueDecl>(decl)->isFinal())
+    if (!cast<ValueDecl>(decl)->isSemanticallyFinal())
       return AccessLevel::Open;
   }
 
@@ -3322,9 +3349,6 @@ AccessLevel ValueDecl::getFormalAccess() const {
 }
 
 bool ValueDecl::hasOpenAccess(const DeclContext *useDC) const {
-  assert(isa<ClassDecl>(this) || isa<ConstructorDecl>(this) ||
-         isPotentiallyOverridable());
-
   AccessLevel access =
       getAdjustedFormalAccess(this, useDC,
                               /*treatUsableFromInlineAsPublic*/false);
@@ -5167,7 +5191,8 @@ void ProtocolDecl::computeKnownProtocolKind() const {
   if (module != module->getASTContext().getStdlibModule() &&
       !module->getName().is("Foundation") &&
       !module->getName().is("_Differentiation") &&
-      !module->getName().is("_Concurrency")) {
+      !module->getName().is("_Concurrency") &&
+      !module->getName().is("_Distributed")) {
     const_cast<ProtocolDecl *>(this)->Bits.ProtocolDecl.KnownProtocol = 1;
     return;
   }

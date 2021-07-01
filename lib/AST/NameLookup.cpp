@@ -1414,6 +1414,7 @@ NominalTypeDecl::lookupDirectRemoteFunc(AbstractFunctionDecl *func) {
   auto remoteFuncId = C.getIdentifier("_remote_" + localFuncName);
 
   auto remoteFuncDecls = selfTyDecl->lookupDirect(DeclName(remoteFuncId));
+
   if (remoteFuncDecls.empty())
     return nullptr;
 
@@ -2261,8 +2262,9 @@ directReferencesForTypeRepr(Evaluator &evaluator,
   case TypeReprKind::SILBox:
   case TypeReprKind::Placeholder:
     return { };
-      
+
   case TypeReprKind::OpaqueReturn:
+  case TypeReprKind::NamedOpaqueReturn:
     return { };
 
   case TypeReprKind::Fixed:

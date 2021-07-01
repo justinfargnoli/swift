@@ -399,8 +399,14 @@ bool RequirementFailure::diagnoseAsNote() {
   const auto &req = getRequirement();
   const auto *reqDC = getRequirementDC();
 
+  // Layout requirement doesn't have a second type, let's always
+  // `AnyObject`.
+  auto requirementTy = req.getKind() == RequirementKind::Layout
+                           ? getASTContext().getAnyObjectType()
+                           : req.getSecondType();
+
   emitDiagnosticAt(reqDC->getAsDecl(), getDiagnosticAsNote(), getLHS(),
-                   getRHS(), req.getFirstType(), req.getSecondType(), "");
+                   getRHS(), req.getFirstType(), requirementTy);
   return true;
 }
 
@@ -899,6 +905,94 @@ bool AttributedFuncToTypeConversionFailure::diagnoseAsError() {
   return true;
 }
 
+static VarDecl *getDestinationVarDecl(AssignExpr *AE,
+                                      const Solution &solution) {
+  ConstraintLocator *locator = nullptr;
+  if (auto *URDE = dyn_cast<UnresolvedDotExpr>(AE->getDest())) {
+    locator = solution.getConstraintLocator(URDE, {ConstraintLocator::Member});
+  } else if (auto *declRef = dyn_cast<DeclRefExpr>(AE->getDest())) {
+    locator = solution.getConstraintLocator(declRef);
+  }
+  if (!locator)
+    return nullptr;
+
+  auto overload = solution.getOverloadChoiceIfAvailable(locator);
+  if (!overload)
+    return nullptr;
+
+  return dyn_cast_or_null<VarDecl>(overload->choice.getDecl());
+}
+
+bool AttributedFuncToTypeConversionFailure::
+    diagnoseFunctionParameterEscapenessMismatch(AssignExpr *AE) const {
+  auto loc = getLocator();
+  if (attributeKind != Escaping)
+    return false;
+
+  if (!loc->findLast<LocatorPathElt::FunctionArgument>())
+    return false;
+
+  auto destType = getType(AE->getDest())->lookThroughAllOptionalTypes();
+  auto destFnType = destType->castTo<FunctionType>();
+  auto sourceType = getType(AE->getSrc())->lookThroughAllOptionalTypes();
+
+  // The tuple locator element will give us the exact parameter mismatch
+  // position.
+  auto tupleElt = loc->getLastElementAs<LocatorPathElt::TupleElement>();
+  auto mismatchPosition = tupleElt ? tupleElt->getIndex() : 0;
+  auto param = destFnType->getParams()[mismatchPosition];
+
+  emitDiagnostic(diag::cannot_convert_assign, sourceType, destType);
+  emitDiagnosticAt(AE->getDest()->getLoc(),
+                   diag::escape_expected_at_parameter_position,
+                   mismatchPosition, param.getParameterType());
+
+  auto &solution = getSolution();
+  auto decl = getDestinationVarDecl(AE, solution);
+  // We couldn't find a declaration to add an extra note with a fix-it but
+  // the main diagnostic was already covered.
+  if (!decl)
+    return true;
+
+  auto declRepr = decl->getTypeReprOrParentPatternTypeRepr();
+  class TopLevelFuncReprFinder : public ASTWalker {
+    bool walkToTypeReprPre(TypeRepr *TR) override {
+      FnRepr = dyn_cast<FunctionTypeRepr>(TR);
+      return FnRepr == nullptr;
+    }
+
+  public:
+    FunctionTypeRepr *FnRepr;
+    TopLevelFuncReprFinder() : FnRepr(nullptr) {}
+  };
+
+  // Look to find top-level function repr that maybe inside optional
+  // representations.
+  TopLevelFuncReprFinder fnFinder;
+  declRepr->walk(fnFinder);
+
+  auto declFnRepr = fnFinder.FnRepr;
+  if (!declFnRepr)
+    return true;
+
+  auto note = emitDiagnosticAt(decl->getLoc(), diag::add_explicit_escaping,
+                               mismatchPosition);
+  auto argsRepr = declFnRepr->getArgsTypeRepr();
+  auto argRepr = argsRepr->getElement(mismatchPosition).Type;
+  if (!param.isAutoClosure()) {
+    note.fixItInsert(argRepr->getStartLoc(), "@escaping ");
+  } else {
+    auto attrRepr = dyn_cast<AttributedTypeRepr>(argRepr);
+    if (attrRepr) {
+      auto autoclosureEndLoc = Lexer::getLocForEndOfToken(
+          getASTContext().SourceMgr,
+          attrRepr->getAttrs().getLoc(TAK_autoclosure));
+      note.fixItInsertAfter(autoclosureEndLoc, " @escaping");
+    }
+  }
+  return true;
+}
+
 bool AttributedFuncToTypeConversionFailure::diagnoseParameterUse() const {
   auto convertTo = getToType();
   // If the other side is not a function, we have common case diagnostics
@@ -955,6 +1049,11 @@ bool AttributedFuncToTypeConversionFailure::diagnoseParameterUse() const {
       diagnostic = diag::passing_noattrfunc_to_attrfunc;
     }
   } else if (auto *AE = getAsExpr<AssignExpr>(getRawAnchor())) {
+    // Attempt to diagnose escape/non-escape mismatch in function
+    // parameter position.
+    if (diagnoseFunctionParameterEscapenessMismatch(AE))
+      return true;
+
     if (auto *DRE = dyn_cast<DeclRefExpr>(AE->getSrc())) {
       PD = dyn_cast<ParamDecl>(DRE->getDecl());
       diagnostic = diag::assigning_noattrfunc_to_attrfunc;
@@ -3177,7 +3276,7 @@ bool TupleContextualFailure::diagnoseAsError() {
   auto purpose = getContextualTypePurpose();
   if (isNumElementsMismatch())
     diagnostic = diag::tuple_types_not_convertible_nelts;
-  else if ((purpose == CTP_Initialization) && !getContextualType(getAnchor()))
+  else if (purpose == CTP_Unused)
     diagnostic = diag::tuple_types_not_convertible;
   else if (auto diag = getDiagnosticFor(purpose, getToType()))
     diagnostic = *diag;
@@ -5337,8 +5436,17 @@ bool ExtraneousReturnFailure::diagnoseAsError() {
     if (FD->getResultTypeRepr() == nullptr &&
         FD->getParameters()->getStartLoc().isValid() &&
         !FD->getBaseIdentifier().empty()) {
-      auto fixItLoc = Lexer::getLocForEndOfToken(
-          getASTContext().SourceMgr, FD->getParameters()->getEndLoc());
+      // Insert the fix-it after the parameter list, and after any
+      // effects specifiers.
+      SourceLoc loc = FD->getParameters()->getEndLoc();
+      if (auto asyncLoc = FD->getAsyncLoc())
+        loc = asyncLoc;
+
+      if (auto throwsLoc = FD->getThrowsLoc())
+        if (throwsLoc.getOpaquePointerValue() > loc.getOpaquePointerValue())
+          loc = throwsLoc;
+
+      auto fixItLoc = Lexer::getLocForEndOfToken(getASTContext().SourceMgr, loc);
       emitDiagnostic(diag::add_return_type_note)
           .fixItInsert(fixItLoc, " -> <#Return Type#>");
     }
@@ -6830,8 +6938,7 @@ bool UnableToInferClosureParameterType::diagnoseAsError() {
 bool UnableToInferClosureReturnType::diagnoseAsError() {
   auto *closure = castToExpr<ClosureExpr>(getRawAnchor());
 
-  auto diagnostic = emitDiagnostic(diag::cannot_infer_closure_result_type,
-                                   closure->hasSingleExpressionBody());
+  auto diagnostic = emitDiagnostic(diag::cannot_infer_closure_result_type);
 
   // If there is a location for an 'in' token, then the argument list was
   // specified somehow but no return type was.  Insert a "-> ReturnType "
@@ -7466,8 +7573,8 @@ SourceRange CheckedCastBaseFailure::getCastRange() const {
   llvm_unreachable("There is no other kind of checked cast!");
 }
 
-std::tuple<Type, Type, unsigned>
-CoercibleOptionalCheckedCastFailure::unwrapedTypes() const {
+std::tuple<Type, Type, int>
+CoercibleOptionalCheckedCastFailure::unwrappedTypes() const {
   SmallVector<Type, 4> fromOptionals;
   SmallVector<Type, 4> toOptionals;
   Type unwrappedFromType =
@@ -7483,8 +7590,7 @@ bool CoercibleOptionalCheckedCastFailure::diagnoseIfExpr() const {
     return false;
 
   Type unwrappedFrom, unwrappedTo;
-  unsigned extraFromOptionals;
-  std::tie(unwrappedFrom, unwrappedTo, extraFromOptionals) = unwrapedTypes();
+  std::tie(unwrappedFrom, unwrappedTo, std::ignore) = unwrappedTypes();
 
   SourceRange diagFromRange = getFromRange();
   SourceRange diagToRange = getToRange();
@@ -7515,8 +7621,8 @@ bool CoercibleOptionalCheckedCastFailure::diagnoseForcedCastExpr() const {
   auto fromType = getFromType();
   auto toType = getToType();
   Type unwrappedFrom, unwrappedTo;
-  unsigned extraFromOptionals;
-  std::tie(unwrappedFrom, unwrappedTo, extraFromOptionals) = unwrapedTypes();
+  int extraFromOptionals;
+  std::tie(unwrappedFrom, unwrappedTo, extraFromOptionals) = unwrappedTypes();
 
   SourceRange diagFromRange = getFromRange();
   SourceRange diagToRange = getToRange();
@@ -7558,8 +7664,7 @@ bool CoercibleOptionalCheckedCastFailure::diagnoseConditionalCastExpr() const {
   auto fromType = getFromType();
   auto toType = getToType();
   Type unwrappedFrom, unwrappedTo;
-  unsigned extraFromOptionals;
-  std::tie(unwrappedFrom, unwrappedTo, extraFromOptionals) = unwrapedTypes();
+  std::tie(unwrappedFrom, unwrappedTo, std::ignore) = unwrappedTypes();
 
   SourceRange diagFromRange = getFromRange();
   SourceRange diagToRange = getToRange();

@@ -480,7 +480,9 @@ endif()
 
 set(SWIFT_BUILD_HOST_DISPATCH FALSE)
 if(SWIFT_ENABLE_DISPATCH AND NOT CMAKE_SYSTEM_NAME STREQUAL Darwin)
-  if(SWIFT_BUILD_SYNTAXPARSERLIB OR SWIFT_BUILD_SOURCEKIT)
+  # Only build libdispatch for the host if the host tools are being built and
+  # specifically if these two libraries that depend on it are built.
+  if(SWIFT_INCLUDE_TOOLS AND (SWIFT_BUILD_SYNTAXPARSERLIB OR SWIFT_BUILD_SOURCEKIT))
     set(SWIFT_BUILD_HOST_DISPATCH TRUE)
   endif()
 
@@ -507,6 +509,13 @@ execute_process(COMMAND ${CMAKE_MAKE_PROGRAM} --version
 message(STATUS "CMake Make Program (${CMAKE_MAKE_PROGRAM}) Version: ${_CMAKE_MAKE_PROGRAM_VERSION}")
 message(STATUS "C Compiler (${CMAKE_C_COMPILER}) Version: ${CMAKE_C_COMPILER_VERSION}")
 message(STATUS "C++ Compiler (${CMAKE_CXX_COMPILER}) Version: ${CMAKE_CXX_COMPILER_VERSION}")
+if (CMAKE_Swift_COMPILER)
+  message(STATUS "Swift Compiler (${CMAKE_Swift_COMPILER}) Version: ${CMAKE_Swift_COMPILER_VERSION}")
+elseif (SWIFT_BUILD_RUNTIME_WITH_HOST_COMPILER)
+  message(FATAL_ERROR "Swift Compiler not found and SWIFT_BUILD_RUNTIME_WITH_HOST_COMPILER is set")
+else()
+  message(STATUS "Swift Compiler (None).")
+endif()
 if(SWIFT_PATH_TO_CMARK_BUILD)
   execute_process(COMMAND ${SWIFT_PATH_TO_CMARK_BUILD}/src/cmark --version
     OUTPUT_VARIABLE _CMARK_VERSION
@@ -521,6 +530,13 @@ if("${SWIFT_NATIVE_CLANG_TOOLS_PATH}" STREQUAL "")
   set(SWIFT_PREBUILT_CLANG FALSE)
 else()
   set(SWIFT_PREBUILT_CLANG TRUE)
+endif()
+
+# Also mark if we have a prebuilt swift before we do anything.
+if("${SWIFT_NATIVE_SWIFT_TOOLS_PATH}" STREQUAL "")
+  set(SWIFT_PREBUILT_SWIFT FALSE)
+else()
+  set(SWIFT_PREBUILT_SWIFT TRUE)
 endif()
 
 include(SwiftSharedCMakeConfig)

@@ -509,6 +509,7 @@ ConstraintLocator *ConstraintSystem::getCalleeLocator(
     case ComponentKind::OptionalWrap:
     case ComponentKind::Identity:
     case ComponentKind::DictionaryKey:
+    case ComponentKind::CodeCompletion:
       // These components don't have any callee associated, so just continue.
       break;
     }
@@ -4270,6 +4271,10 @@ void constraints::simplifyLocator(ASTNode &anchor,
       // Arguments in autoclosure positions, lvalue and rvalue adjustments,
       // unresolved members, and implicit callAsFunction references are
       // implicit.
+      path = path.slice(1);
+      continue;
+
+   case ConstraintLocator::TupleType:
       path = path.slice(1);
       continue;
 
