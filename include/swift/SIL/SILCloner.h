@@ -479,17 +479,18 @@ public:
   }
 };
 
-std::unqiue_ptr<SILModule> cloneModule(SILModule *originalModule) {
+void /*std::unique_ptr<SILModule>*/ cloneModule(SILModule *originalModule) {
   // Create a new module to copy the contents of \p originalModule into. 
-  llvm::PointerUnion<FileUnit *, ModuleDecl *> context{};
-  context = (ModuleDecl *)originalModule->getSwiftModule();
-  Lowering::TypeConverter typeConverter{originalModule->getSwiftModule()};
-  auto newModule = SILModule::createEmptyModule(context, typeConverter,
-                                                originalModule->getOptions());
+  // llvm::PointerUnion<FileUnit *, ModuleDecl *> context{};
+  // context = (ModuleDecl *)originalModule->getSwiftModule();
+  // auto &swiftModule = originalModule->getSwiftModule();
+  // auto newModule = SILModule::createEmptyModule(context, 
+  //     Lowering::TypeConverter{swiftModule},
+  //     originalModule->getOptions());
 
   // copy metadata from \p originalModule to \p newModule
 
-  for (auto &originalFunction : originalModule) {
+  for (auto &originalFunction : *originalModule) {
     // copy \p originalFunction into \p newModule
   }
 
@@ -497,7 +498,7 @@ std::unqiue_ptr<SILModule> cloneModule(SILModule *originalModule) {
     // copy \p originalGlobalVar into \p newModule
   }
 
-  return newModule;
+  // return newModule;
 }
 
 template<typename ImplClass>
