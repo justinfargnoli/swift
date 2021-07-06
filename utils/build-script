@@ -1049,7 +1049,7 @@ class BuildScriptInvocation(object):
                 self.execute_product_build_steps(product_class, host_target)
 
         # Build...
-        for host_target in all_hosts:
+        for i, host_target in enumerate(all_hosts):
             # FIXME: We should only compute these once.
             try:
                 config = HostSpecificConfiguration(host_target.name, self.args)
@@ -1066,7 +1066,14 @@ class BuildScriptInvocation(object):
                     " ".join(config.swift_benchmark_run_targets)))
 
             for product_class in impl_product_classes:
-                self._execute_build_action(host_target, product_class)
+                if product_class.__name__ == products.Alive.__name__:
+                    # FIXME: Build `Alive` via `build-script-imp` 
+                    # instead of `build-script` so this hack around can be 
+                    # removed.
+                    self.execute_product_build_steps(product_class, 
+                        all_host_names[i])
+                else:
+                    self._execute_build_action(host_target, product_class)
 
         # Test...
         for host_target in all_hosts:

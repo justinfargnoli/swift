@@ -10,6 +10,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+// FIXME: add include gaurds
+
 #include "swift/SIL/SILModule.h"
 
 using namespace swift;

@@ -14,6 +14,7 @@ from build_swift.build_swift.wrappers import xcrun
 
 from . import cmake_product
 from . import earlyswiftdriver
+from . import llvm
 from . import z3
 import os
 import shutil
@@ -25,7 +26,7 @@ class Alive(cmake_product.CMakeProduct):
 
         Whether this product is produced by build-script-impl.
         """
-        return False
+        return True
 
     @classmethod
     def is_before_build_script_impl_product(cls):
@@ -33,12 +34,12 @@ class Alive(cmake_product.CMakeProduct):
 
         Whether this product is build before any build-script-impl products.
         """
-        return True
+        return False
 
     # EarlySwiftDriver is the root of the graph
     @classmethod
     def get_dependencies(cls):
-        return [earlyswiftdriver.EarlySwiftDriver, z3.Z3]
+        return [earlyswiftdriver.EarlySwiftDriver, z3.Z3, llvm.LLVM]
 
     def should_build(self, host_target):
         """should_build() -> Bool
@@ -78,6 +79,11 @@ class Alive(cmake_product.CMakeProduct):
             self.cmake_options.define('CMAKE_OSX_ARCHITECTURES', arch)
 
         self.cmake_options.define('BUILD_TV', '0')
+        self.cmake_options.define('BUILD_LLVM_UTILS', '1')
+        print("CMake Options: " + str(self.cmake_options._options))
+        self.cmake_options.define('CMAKE_PREFIX_PATH', '%s' %
+                os.path.join(os.path.dirname(self.build_dir), 'llvm-macosx-x86_64'))
+        print("CMake Options: " + str(self.cmake_options._options))
         self.cmake_options.define('Z3_INCLUDE_DIR', 
                 os.path.join(os.path.dirname(self.build_dir), 'z3-macosx-x86_64', 'include'))
         # FIXME: Don't hardcode x86 here.
