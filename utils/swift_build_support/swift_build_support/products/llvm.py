@@ -29,6 +29,14 @@ class LLVM(product.Product):
         self.cmake_options.define(
             'LLVM_TARGETS_TO_BUILD', args.llvm_targets_to_build)
 
+        if args.build_alive:
+            # Add the cmake option to necessary to build Alive.
+
+            # FIXME: Modify Alive edit that `LLVM_ENABLE_EH`
+            # isn't necessary
+            self.cmake_options.define('LLVM_ENABLE_EH', "ON")
+            self.cmake_options.define('LLVM_ENABLE_RTTI', "ON")
+
         # Add the cmake options for vendors
         self.cmake_options.extend(self._compiler_vendor_flags)
 
