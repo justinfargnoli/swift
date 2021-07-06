@@ -4357,6 +4357,8 @@ ERROR(async_objc_dynamic_self,none,
 ERROR(actor_inheritance,none,
       "%select{actor|distributed actor}0 types do not support inheritance",
       (bool))
+NOTE(actor_inheritance_nsobject,none,
+      "use '@objc' to expose actor %0 to Objective-C", (DeclName))
 
 ERROR(actor_protocol_illegal_inheritance,none,
       "non-actor type %0 cannot conform to the 'Actor' protocol",
@@ -4623,6 +4625,9 @@ ERROR(actor_isolation_multiple_attr,none,
 ERROR(actor_isolation_override_mismatch,none,
       "%0 %1 %2 has different actor isolation from %3 overridden declaration",
       (ActorIsolation, DescriptiveDeclKind, DeclName, ActorIsolation))
+ERROR(actor_isolation_superclass_mismatch,none,
+      "%0 class %1 has different actor isolation from %2 superclass %3",
+      (ActorIsolation, DeclName, ActorIsolation, DeclName))
 
 //------------------------------------------------------------------------------
 // MARK: Type Check Types

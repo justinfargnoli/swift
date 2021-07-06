@@ -5831,11 +5831,24 @@ void VarDecl::setNamingPattern(NamedPattern *Pat) {
 }
 
 TypeRepr *VarDecl::getTypeReprOrParentPatternTypeRepr() const {
-  if (auto *param = dyn_cast<ParamDecl>(this))
-    return param->getTypeRepr();
+  if (auto *Param = dyn_cast<ParamDecl>(this))
+    return Param->getTypeRepr();
 
-  if (auto *parentPattern = dyn_cast_or_null<TypedPattern>(getParentPattern()))
-    return parentPattern->getTypeRepr();
+  auto *ParentPattern = getParentPattern();
+
+  if (auto *TyPattern = dyn_cast_or_null<TypedPattern>(ParentPattern))
+    return TyPattern->getTypeRepr();
+
+  // Handle typed if/guard/while-let as a special case (e.g. `if let x: Int
+  // = Optional.some(4)`), since the `TypedPattern` is not the top-level
+  // pattern here - instead it is an implicit `OptionalSomePattern`
+  if (auto *SomePattern =
+          dyn_cast_or_null<OptionalSomePattern>(ParentPattern)) {
+    if (auto *TyPattern =
+            dyn_cast<TypedPattern>(SomePattern->getSubPattern())) {
+      return TyPattern->getTypeRepr();
+    }
+  }
 
   return nullptr;
 }
@@ -6570,9 +6583,12 @@ Expr *ParamDecl::getTypeCheckedDefaultExpr() const {
   }
 
   auto &ctx = getASTContext();
-  return evaluateOrDefault(
-      ctx.evaluator, DefaultArgumentExprRequest{const_cast<ParamDecl *>(this)},
-      new (ctx) ErrorExpr(getSourceRange(), ErrorType::get(ctx)));
+  if (Expr *E = evaluateOrDefault(
+          ctx.evaluator,
+          DefaultArgumentExprRequest{const_cast<ParamDecl *>(this)}, nullptr)) {
+    return E;
+  }
+  return new (ctx) ErrorExpr(getSourceRange(), ErrorType::get(ctx));
 }
 
 void ParamDecl::setDefaultExpr(Expr *E, bool isTypeChecked) {
@@ -8289,15 +8305,14 @@ bool ClassDecl::isRootDefaultActor(ModuleDecl *M,
 }
 
 bool ClassDecl::isNativeNSObjectSubclass() const {
-  // Only if we inherit from NSObject.
-  auto superclass = getSuperclassDecl();
-  if (!superclass || !superclass->isNSObject())
-    return false;
+  // @objc actors implicitly inherit from NSObject.
+  if (isActor() && getAttrs().hasAttribute<ObjCAttr>())
+    return true;
 
-  // For now, only actors (regardless of whether they're default actors).
-  // Eventually we should roll this out to more classes, but we have to
-  // do it with ABI compatibility.
-  return isActor();
+  // For now, non-actor classes cannot use the native NSObject subclass.
+  // Eventually we should roll this out to more classes that directly
+  // inherit NSObject, but we have to do it with ABI compatibility.
+  return false;
 }
 
 bool ClassDecl::isNSObject() const {
