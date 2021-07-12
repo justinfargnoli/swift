@@ -63,7 +63,7 @@
             "remote": { "id": "apple/llvm-project" } },
         "z3": {
             "remote": { "id": "Z3Prover/z3" } },
-        "alive2": {
+        "alive": {
             "remote": { "id": "justinfargnoli/alive" } }
     },
     "default-branch-scheme": "main",
@@ -99,7 +99,7 @@
                 "sourcekit-lsp": "main",
                 "swift-format": "main",
                 "z3": "4.8.10",
-                "alive2": "main"
+                "alive": "main"
             }
         },
        "release/5.5": {
