@@ -55,6 +55,7 @@ TYPE_ATTR(differentiable)
 TYPE_ATTR(noDerivative)
 TYPE_ATTR(async)
 TYPE_ATTR(Sendable)
+TYPE_ATTR(unchecked)
 
 // SIL-specific attributes
 TYPE_ATTR(block_storage)
@@ -673,7 +674,7 @@ SIMPLE_DECL_ATTR(_distributedActorIndependent, DistributedActorIndependent,
   119)
 
 SIMPLE_DECL_ATTR(_assemblyVision, EmitAssemblyVisionRemarks,
-  OnFunc | UserInaccessible | NotSerialized |
+  OnFunc | UserInaccessible | NotSerialized | OnNominalType |
   ABIStableToAdd | ABIStableToRemove | APIStableToAdd | APIStableToRemove,
   120)
 

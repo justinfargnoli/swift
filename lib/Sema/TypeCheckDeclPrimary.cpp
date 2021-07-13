@@ -73,7 +73,7 @@ using namespace swift;
 static void checkInheritanceClause(
     llvm::PointerUnion<const TypeDecl *, const ExtensionDecl *> declUnion) {
   const DeclContext *DC;
-  ArrayRef<TypeLoc> inheritedClause;
+  ArrayRef<InheritedEntry> inheritedClause;
   const ExtensionDecl *ext = nullptr;
   const TypeDecl *typeDecl = nullptr;
   const Decl *decl;
@@ -2107,6 +2107,14 @@ public:
       }
     }
 
+    // Reject "class" methods on actors.
+    if (SD->getStaticSpelling() == StaticSpellingKind::KeywordClass &&
+        SD->getDeclContext()->getSelfClassDecl() &&
+        SD->getDeclContext()->getSelfClassDecl()->isActor()) {
+      SD->diagnose(diag::class_subscript_not_in_class, false)
+          .fixItReplace(SD->getStaticLoc(), "static");
+    }
+
     // Now check all the accessors.
     SD->visitEmittedAccessors([&](AccessorDecl *accessor) {
       visit(accessor);
@@ -2398,18 +2406,12 @@ public:
 
     if (auto superclass = CD->getSuperclassDecl()) {
       // Actors cannot have superclasses, nor can they be superclasses.
-      if (CD->isActor()) {
+      if (CD->isActor() && !superclass->isNSObject())
         CD->diagnose(diag::actor_inheritance,
                      /*distributed=*/CD->isDistributedActor());
-        if (superclass->isNSObject() && !CD->isDistributedActor()) {
-          CD->diagnose(diag::actor_inheritance_nsobject, CD->getName())
-            .fixItInsert(CD->getAttributeInsertionLoc(/*forModifier=*/false),
-                         "@objc ");
-        }
-      } else if (superclass->isActor()) {
+      else if (superclass->isActor())
         CD->diagnose(diag::actor_inheritance,
                      /*distributed=*/CD->isDistributedActor());
-      }
     }
 
     // Force lowering of stored properties.
@@ -2751,6 +2753,14 @@ public:
           }
         }
       }
+    }
+
+    // Reject "class" methods on actors.
+    if (StaticSpelling == StaticSpellingKind::KeywordClass &&
+        FD->getDeclContext()->getSelfClassDecl() &&
+        FD->getDeclContext()->getSelfClassDecl()->isActor()) {
+      FD->diagnose(diag::class_func_not_in_class, false)
+          .fixItReplace(FD->getStaticLoc(), "static");
     }
 
     // Member functions need some special validation logic.

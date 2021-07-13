@@ -2246,7 +2246,7 @@ namespace {
         Type subPatternType = getTypeForPattern(
             subPattern,
             locator.withPathElement(LocatorPathElt::PatternMatch(subPattern)),
-            openedType, bindPatternVarsOneWay);
+            openedType, /*bindPatternVarsOneWay*/false);
 
         if (!subPatternType)
           return Type();
@@ -3233,7 +3233,7 @@ namespace {
           break;
         }
         case KeyPathExpr::Component::Kind::Identity:
-          continue;
+          break;
         case KeyPathExpr::Component::Kind::DictionaryKey:
           llvm_unreachable("DictionaryKey only valid in #keyPath");
           break;
