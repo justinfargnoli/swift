@@ -76,6 +76,8 @@ class Z3(cmake_product.CMakeProduct):
                                       cmake_osx_deployment_target)
             self.cmake_options.define('CMAKE_OSX_ARCHITECTURES', arch)
 
+        self.cmake_options.define('Z3_BUILD_LIBZ3_SHARED', 'OFF')
+
         self.cmake_options.define('CMAKE_INSTALL_PREFIX', self.build_dir)
         self.cmake_options.define('CMAKE_INSTALL_INCLUDEDIR', 'include')
         self.build_with_cmake(["all"], self.args.swift_build_variant, [])

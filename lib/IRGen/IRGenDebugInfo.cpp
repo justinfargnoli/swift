@@ -2533,7 +2533,7 @@ void IRGenDebugInfoImpl::emitTypeMetadata(IRGenFunction &IGF,
     return;
 
   llvm::SmallString<8> Buf;
-  static const char8_t *Tau = u8"\u03C4";
+  static const char *Tau = u8"\u03C4";
   llvm::raw_svector_ostream OS(Buf);
   OS << '$' << Tau << '_' << Depth << '_' << Index;
   auto DbgTy = DebugTypeInfo::getArchetype(

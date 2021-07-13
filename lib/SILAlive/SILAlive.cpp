@@ -52,10 +52,10 @@ GeneratedModule genIR(std::unique_ptr<SILModule> SILMod) {
       /*parallelOutputFilenames=*/ {}, &HashGlobal);
 }
 
-std::optional<IR::Function> aliveIRGen(llvm::Function &F, llvm::Triple triple) {
+IR::Function *aliveIRGen(llvm::Function &F, llvm::Triple triple) {
   return llvm_util::llvm2alive(F, 
       llvm::TargetLibraryInfo{llvm::TargetLibraryInfoImpl{triple}}, 
-      std::vector<std::string_view>());
+      std::vector<std::string_view>()).getPointer();
 }
 
 bool SILAliveLLVM(SILModule *M) { 
@@ -77,14 +77,15 @@ bool SILAliveLLVM(SILModule *M) {
   auto begin = IRMod->begin();
   assert(begin != IRMod->end() && 
       "The must be at least one function in the IR module.");
-  llvm::Function *function = &*begin;
+  llvm::Function *functionLLVM = &*begin;
 
   // Lower LLVM IR to Alive IR
-  auto result = aliveIRGen(*function, 
+  auto functionAlive = aliveIRGen(*functionLLVM, 
       generatedModule.getTargetMachine()->getTargetTriple());
+  assert(!functionAlive && "AliveIRGen failed");
 
   // Store Alive IR in ASTContext
   // TODO
 
-  return true; 
+  return false; 
 }

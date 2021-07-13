@@ -51,29 +51,29 @@ TEST(FuzzyStringMatcher, SingleCharacterMatching) {
   EXPECT_FALSE(FuzzyStringMatcher("a").matchesCandidate(""));
 }
 
-// TEST(FuzzyStringMatcher, UnicodeMatching) {
-//   // Single code point matching.
-//   EXPECT_TRUE(FuzzyStringMatcher(u8"\u2602a\U0002000Bz")
-//                   .matchesCandidate(u8"\u2602A\U0002000BZ"));
+TEST(FuzzyStringMatcher, UnicodeMatching) {
+  // Single code point matching.
+  EXPECT_TRUE(FuzzyStringMatcher(u8"\u2602a\U0002000Bz")
+                  .matchesCandidate(u8"\u2602A\U0002000BZ"));
 
-//   // Same-order combining marks.
-//   EXPECT_TRUE(FuzzyStringMatcher(u8"a\u0323\u0307")
-//                   .matchesCandidate(u8"A\u0323\u0307"));
+  // Same-order combining marks.
+  EXPECT_TRUE(FuzzyStringMatcher(u8"a\u0323\u0307")
+                  .matchesCandidate(u8"A\u0323\u0307"));
 
-//   // FIXME: Canonical equivalence. These should be the same.
-//   EXPECT_FALSE(FuzzyStringMatcher(u8"a\u0307\u0323")
-//                    .matchesCandidate(u8"A\u0323\u0307"));
-//   EXPECT_FALSE(FuzzyStringMatcher(u8"a\u00C5").matchesCandidate(u8"A\u030A"));
+  // FIXME: Canonical equivalence. These should be the same.
+  EXPECT_FALSE(FuzzyStringMatcher(u8"a\u0307\u0323")
+                   .matchesCandidate(u8"A\u0323\u0307"));
+  EXPECT_FALSE(FuzzyStringMatcher(u8"a\u00C5").matchesCandidate(u8"A\u030A"));
 
-//   // FIXME: Compatibility equivalence.  It would be good to make these the same
-//   // too, since we're fuzzy matching.
-//   EXPECT_FALSE(FuzzyStringMatcher(u8"fi").matchesCandidate(u8"\uFB01"));
-//   EXPECT_FALSE(FuzzyStringMatcher(u8"25").matchesCandidate(u8"2\u2075"));
+  // FIXME: Compatibility equivalence.  It would be good to make these the same
+  // too, since we're fuzzy matching.
+  EXPECT_FALSE(FuzzyStringMatcher(u8"fi").matchesCandidate(u8"\uFB01"));
+  EXPECT_FALSE(FuzzyStringMatcher(u8"25").matchesCandidate(u8"2\u2075"));
 
-//   // FIXME: Case-insensitivity in non-ASCII characters.
-//   EXPECT_FALSE(FuzzyStringMatcher(u8"\u00E0").matchesCandidate(u8"\u00C0"));
-//   EXPECT_FALSE(FuzzyStringMatcher(u8"ss").matchesCandidate(u8"\u00DF"));
-// }
+  // FIXME: Case-insensitivity in non-ASCII characters.
+  EXPECT_FALSE(FuzzyStringMatcher(u8"\u00E0").matchesCandidate(u8"\u00C0"));
+  EXPECT_FALSE(FuzzyStringMatcher(u8"ss").matchesCandidate(u8"\u00DF"));
+}
 
 TEST(FuzzyStringMatcher, BasicScoring) {
   FuzzyStringMatcher m("ASDF");

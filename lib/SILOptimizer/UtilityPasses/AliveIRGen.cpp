@@ -20,7 +20,7 @@ namespace {
 class AliveIRGen : public SILModuleTransform {
   void run() override { 
     auto result = SILAliveLLVM(getModule()); 
-    assert(!result); 
+    assert(result); 
   }
 };
 
