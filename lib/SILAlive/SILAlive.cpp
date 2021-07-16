@@ -17,6 +17,7 @@
 #include "swift/AST/IRGenOptions.h"
 #include "swift/AST/IRGenRequests.h"
 #include "swift/Basic/PrimarySpecificPaths.h"
+#include "swift/SIL/SILCloner.h"
 #include "swift/SIL/SILModule.h"
 #include "swift/SILAlive/SILAlive.h"
 #include "swift/SILOptimizer/PassManager/Passes.h"
@@ -38,11 +39,12 @@ void lowerSIL(SILModule &SILMod) {
   case SILStage::Lowered:
     break;
  }
+ assert(SILMod.getStage() == SILStage::Lowered && "SILStage must be Lowered");
 }
 
 GeneratedModule genIR(std::unique_ptr<SILModule> SILMod) {
   // Lower \p SILMod to SILStage::Lowered
-  lowerSIL(*SILMod.get());
+  lowerSIL(*SILMod);
 
   // Generate LLVM IR for the \p SILMod
   llvm::GlobalVariable *HashGlobal;
@@ -61,15 +63,25 @@ IR::Function *aliveIRGen(llvm::Function &F, llvm::Triple triple) {
 bool SILAliveLLVM(SILModule *M) { 
   std::unique_ptr<SILModule> SILMod(M);
 
-  // Generate LLLVM IR for the SILModule
-  GeneratedModule generatedModule = genIR(std::move(SILMod));
+  // FIXME: don't allow clone to be run on SILStage::Lowered
+  // Clone the SIL Module
+  auto SILModClone = cloneModule(SILMod.get());
+  // TODO: Remove
+  llvm::errs() << "\n- BEFORE SILMod dump\n";
+  SILMod->dump(); 
+  llvm::errs() << "\n- AFTER SILMod dump\n";
+  llvm::errs() << "\n- BEFORE SILModClone dump\n";
+  SILModClone->dump(); 
+  llvm::errs() << "\n- AFTER SILModClone dump\n";
+  // Generate LLVM IR for the SILModule
+  GeneratedModule generatedModule = genIR(std::move(SILModClone));
   llvm::Module *IRMod = generatedModule.getModule();
   assert(IRMod && "IR module generation failed.");
 
   // TODO: Remove
-  llvm::errs() << "\n- BEFORE dump\n";
+  llvm::errs() << "\n- BEFORE IRMod dump\n";
   IRMod->dump(); 
-  llvm::errs() << "\n- AFTER dump\n";
+  llvm::errs() << "\n- AFTER IRMod dump\n";
 
   // The version of this tool that translated SIL to Alive IR directly 
   // will be a \c SILFunctionTransform instead of a \c SILModuleTransform.

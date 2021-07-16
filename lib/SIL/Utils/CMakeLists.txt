@@ -14,6 +14,7 @@ target_sources(swiftSIL PRIVATE
   PrettyStackTrace.cpp
   Projection.cpp
   SILBridging.cpp
+  SILCloner.cpp
   SILInstructionWorklist.cpp
   SILRemarkStreamer.cpp
   ValueUtils.cpp)
