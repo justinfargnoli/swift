@@ -1319,6 +1319,10 @@ void InterfaceSubContextDelegateImpl::inheritOptionsForBuildingInterface(
   // If we are supposed to use RequireOSSAModules, do so.
   genericSubInvocation.getSILOptions().EnableOSSAModules =
       bool(RequireOSSAModules);
+  if (LangOpts.DisableAvailabilityChecking) {
+    genericSubInvocation.getLangOptions().DisableAvailabilityChecking = true;
+    GenericArgs.push_back("-disable-availability-checking");
+  }
 }
 
 bool InterfaceSubContextDelegateImpl::extractSwiftInterfaceVersionAndArgs(
@@ -1647,15 +1651,20 @@ InterfaceSubContextDelegateImpl::runInSubCompilerInstance(StringRef moduleName,
   }
   info.BuildArguments = BuildArgs;
   info.Hash = CacheHash;
-  auto target =  *(std::find(BuildArgs.rbegin(), BuildArgs.rend(), "-target") - 1);
+  auto target = *(std::find(BuildArgs.rbegin(), BuildArgs.rend(), "-target") - 1);
   auto langVersion = *(std::find(BuildArgs.rbegin(), BuildArgs.rend(),
                                  "-swift-version") - 1);
-  std::array<StringRef, 6> ExtraPCMArgs = {
-    // PCMs should use the target triple the interface will be using to build
-    "-Xcc", "-target", "-Xcc", target,
+
+  std::vector<StringRef> ExtraPCMArgs = {
     // PCMs should use the effective Swift language version for apinotes.
-    "-Xcc", ArgSaver.save((llvm::Twine("-fapinotes-swift-version=") + langVersion).str())
+    "-Xcc",
+    ArgSaver.save((llvm::Twine("-fapinotes-swift-version=") + langVersion).str())
   };
+  if (!subInvocation.getLangOptions().ClangTarget.hasValue()) {
+    ExtraPCMArgs.insert(ExtraPCMArgs.begin(), {"-Xcc", "-target",
+                                               "-Xcc", target});
+  }
+
   info.ExtraPCMArgs = ExtraPCMArgs;
   // Run the action under the sub compiler instance.
   return action(info);

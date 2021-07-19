@@ -3472,7 +3472,7 @@ void ArchetypeType::registerNestedType(Identifier name, Type nested) {
          "Unable to find nested type?");
   assert(!found->second ||
          found->second->isEqual(nested) ||
-         (found->second->hasError() && nested->hasError()));
+         found->second->is<ErrorType>());
   found->second = nested;
 }
 
@@ -3636,9 +3636,10 @@ bool SILFunctionType::hasSameExtInfoAs(const SILFunctionType *otherFn) {
 }
 
 FunctionType *
-GenericFunctionType::substGenericArgs(SubstitutionMap subs) {
+GenericFunctionType::substGenericArgs(SubstitutionMap subs,
+                                      SubstOptions options) {
   return substGenericArgs(
-    [=](Type t) { return t.subst(subs); });
+    [=](Type t) { return t.subst(subs, options); });
 }
 
 FunctionType *GenericFunctionType::substGenericArgs(

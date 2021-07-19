@@ -82,11 +82,13 @@ private:
 
   friend class GenericSignatureImpl;
   friend class GenericSignatureBuilder;
+  friend class RequirementMachine;
 
 public:
   typedef const Entry *const_iterator;
   typedef const_iterator iterator;
 
+  unsigned size() const { return path.size(); }
   const_iterator begin() const { return path.begin(); }
   const_iterator end() const { return path.end(); }
 
@@ -162,6 +164,18 @@ public:
                       ArrayRef<Requirement> requirements);
 public:
   using RequiredProtocols = SmallVector<ProtocolDecl *, 2>;
+
+  /// Stores a set of requirements on a type parameter. Used by
+  /// GenericEnvironment for building archetypes.
+  struct LocalRequirements {
+    Type anchor;
+
+    Type concreteType;
+    Type superclass;
+
+    RequiredProtocols protos;
+    LayoutConstraint layout;
+  };
 
 private:
   // Direct comparison is disabled for generic signatures.  Canonicalize them
@@ -312,6 +326,10 @@ public:
   /// signature.
   GenericEnvironment *getGenericEnvironment() const;
 
+  /// Collects a set of requirements on a type parameter. Used by
+  /// GenericEnvironment for building archetypes.
+  GenericSignature::LocalRequirements getLocalRequirements(Type depType) const;
+
   /// Uniquing for the ASTContext.
   void Profile(llvm::FoldingSetNodeID &ID) const {
     Profile(ID, getGenericParams(), getRequirements());
@@ -388,6 +406,9 @@ public:
   /// \seealso ConformanceAccessPath
   ConformanceAccessPath getConformanceAccessPath(Type type,
                                                  ProtocolDecl *protocol) const;
+
+  /// Lookup a nested type with the given name within this type parameter.
+  TypeDecl *lookupNestedType(Type type, Identifier name) const;
 
   /// Get the ordinal of a generic parameter in this generic signature.
   ///

@@ -247,12 +247,148 @@ CanGenericSignature GenericSignatureImpl::getCanonicalSignature() const {
 
 GenericEnvironment *GenericSignatureImpl::getGenericEnvironment() const {
   if (GenericEnv == nullptr) {
-    auto *builder = getGenericSignatureBuilder();
     const auto impl = const_cast<GenericSignatureImpl *>(this);
-    impl->GenericEnv = GenericEnvironment::getIncomplete(this, builder);
+    impl->GenericEnv = GenericEnvironment::getIncomplete(this);
   }
 
   return GenericEnv;
+}
+
+GenericSignature::LocalRequirements
+GenericSignatureImpl::getLocalRequirements(Type depType) const {
+  assert(depType->isTypeParameter() && "Expected a type parameter here");
+
+  auto computeViaGSB = [&]() {
+    GenericSignature::LocalRequirements result;
+
+    auto &builder = *getGenericSignatureBuilder();
+
+    auto resolved =
+      builder.maybeResolveEquivalenceClass(
+                                    depType,
+                                    ArchetypeResolutionKind::CompleteWellFormed,
+                                    /*wantExactPotentialArchetype=*/false);
+    if (!resolved) {
+      result.concreteType = ErrorType::get(depType);
+      return result;
+    }
+
+    if (auto concreteType = resolved.getAsConcreteType()) {
+      result.concreteType = concreteType;
+      return result;
+    }
+
+    auto *equivClass = resolved.getEquivalenceClass(builder);
+
+    auto genericParams = getGenericParams();
+    result.anchor = equivClass->getAnchor(builder, genericParams);
+
+    if (equivClass->concreteType) {
+      result.concreteType = equivClass->concreteType;
+      return result;
+    }
+
+    result.superclass = equivClass->superclass;
+
+    for (const auto &conforms : equivClass->conformsTo) {
+      auto proto = conforms.first;
+
+      if (!equivClass->isConformanceSatisfiedBySuperclass(proto))
+        result.protos.push_back(proto);
+    }
+
+    result.layout = equivClass->layout;
+
+    return result;
+  };
+
+  auto computeViaRQM = [&]() {
+    auto *machine = getRequirementMachine();
+    return machine->getLocalRequirements(depType, getGenericParams());
+  };
+
+  auto &ctx = getASTContext();
+  switch (ctx.LangOpts.EnableRequirementMachine) {
+  case RequirementMachineMode::Disabled:
+    return computeViaGSB();
+
+  case RequirementMachineMode::Enabled:
+    return computeViaRQM();
+
+  case RequirementMachineMode::Verify: {
+    auto rqmResult = computeViaRQM();
+    auto gsbResult = computeViaGSB();
+
+    auto typesEqual = [&](Type lhs, Type rhs) {
+      if (!lhs || !rhs)
+        return !lhs == !rhs;
+      return lhs->isEqual(rhs);
+    };
+
+    auto compare = [&]() {
+      // If the types are concrete, we don't care about the rest.
+      if (gsbResult.concreteType || rqmResult.concreteType) {
+        if (!typesEqual(gsbResult.concreteType, rqmResult.concreteType))
+          return false;
+
+        return true;
+      }
+
+      if (!typesEqual(gsbResult.anchor, rqmResult.anchor))
+        return false;
+
+      if (gsbResult.layout != rqmResult.layout)
+        return false;
+
+      auto lhsProtos = gsbResult.protos;
+      ProtocolType::canonicalizeProtocols(lhsProtos);
+      auto rhsProtos = rqmResult.protos;
+      ProtocolType::canonicalizeProtocols(rhsProtos);
+
+      if (lhsProtos != rhsProtos)
+        return false;
+
+      return true;
+    };
+
+    auto dumpReqs = [&](const GenericSignature::LocalRequirements &reqs) {
+      if (reqs.anchor) {
+        llvm::errs() << "- Anchor: " << reqs.anchor << "\n";
+        reqs.anchor.dump(llvm::errs());
+      }
+      if (reqs.concreteType) {
+        llvm::errs() << "- Concrete type: " << reqs.concreteType << "\n";
+        reqs.concreteType.dump(llvm::errs());
+      }
+      if (reqs.superclass) {
+        llvm::errs() << "- Superclass: " << reqs.superclass << "\n";
+        reqs.superclass.dump(llvm::errs());
+      }
+      if (reqs.layout) {
+        llvm::errs() << "- Layout: " << reqs.layout << "\n";
+      }
+      for (const auto *proto : reqs.protos) {
+        llvm::errs() << "- Conforms to: " << proto->getName() << "\n";
+      }
+    };
+
+    if (!compare()) {
+      llvm::errs() << "RequirementMachine::getLocalRequirements() is broken\n";
+      llvm::errs() << "Generic signature: " << GenericSignature(this) << "\n";
+      llvm::errs() << "Dependent type: "; depType.dump(llvm::errs());
+      llvm::errs() << "GenericSignatureBuilder says:\n";
+      dumpReqs(gsbResult);
+      llvm::errs() << "\n";
+      llvm::errs() << "RequirementMachine says:\n";
+      dumpReqs(rqmResult);
+      llvm::errs() << "\n";
+      getRequirementMachine()->dump(llvm::errs());
+      abort();
+    }
+
+    return rqmResult;
+  }
+  }
 }
 
 ASTContext &GenericSignatureImpl::getASTContext() const {
@@ -304,11 +440,16 @@ bool GenericSignatureImpl::requiresClass(Type type) const {
   };
 
   auto &ctx = getASTContext();
-  if (ctx.LangOpts.EnableRequirementMachine) {
-    bool rqmResult = computeViaRQM();
+  switch (ctx.LangOpts.EnableRequirementMachine) {
+  case RequirementMachineMode::Disabled:
+    return computeViaGSB();
 
-#ifndef NDEBUG
-    bool gsbResult = computeViaGSB();
+  case RequirementMachineMode::Enabled:
+    return computeViaRQM();
+
+  case RequirementMachineMode::Verify: {
+    auto rqmResult = computeViaRQM();
+    auto gsbResult = computeViaGSB();
 
     if (gsbResult != rqmResult) {
       llvm::errs() << "RequirementMachine::requiresClass() is broken\n";
@@ -319,11 +460,9 @@ bool GenericSignatureImpl::requiresClass(Type type) const {
       getRequirementMachine()->dump(llvm::errs());
       abort();
     }
-#endif
 
     return rqmResult;
-  } else {
-    return computeViaGSB();
+  }
   }
 }
 
@@ -332,19 +471,64 @@ Type GenericSignatureImpl::getSuperclassBound(Type type) const {
   assert(type->isTypeParameter() &&
          "Only type parameters can have superclass requirements");
 
-  auto &builder = *getGenericSignatureBuilder();
-  auto equivClass =
-  builder.resolveEquivalenceClass(
-                                type,
-                                ArchetypeResolutionKind::CompleteWellFormed);
-  if (!equivClass) return nullptr;
+  auto computeViaGSB = [&]() -> Type {
+    auto &builder = *getGenericSignatureBuilder();
+    auto equivClass =
+    builder.resolveEquivalenceClass(
+                                  type,
+                                  ArchetypeResolutionKind::CompleteWellFormed);
+    if (!equivClass) return nullptr;
 
-  // If this type was mapped to a concrete type, then there is no
-  // requirement.
-  if (equivClass->concreteType) return nullptr;
+    // If this type was mapped to a concrete type, then there is no
+    // requirement.
+    if (equivClass->concreteType) return nullptr;
 
-  // Retrieve the superclass bound.
-  return equivClass->superclass;
+    // Retrieve the superclass bound.
+    return equivClass->superclass;
+  };
+
+  auto computeViaRQM = [&]() {
+    auto *machine = getRequirementMachine();
+    return machine->getSuperclassBound(type);
+  };
+
+  auto &ctx = getASTContext();
+  switch (ctx.LangOpts.EnableRequirementMachine) {
+  case RequirementMachineMode::Disabled:
+    return computeViaGSB();
+
+  case RequirementMachineMode::Enabled:
+    return computeViaRQM();
+
+  case RequirementMachineMode::Verify: {
+    auto rqmResult = computeViaRQM();
+    auto gsbResult = computeViaGSB();
+
+    auto check = [&]() {
+      if (!gsbResult || !rqmResult)
+        return !gsbResult == !rqmResult;
+      return gsbResult->isEqual(rqmResult);
+    };
+
+    if (!check()) {
+      llvm::errs() << "RequirementMachine::getSuperclassBound() is broken\n";
+      llvm::errs() << "Generic signature: " << GenericSignature(this) << "\n";
+      llvm::errs() << "Dependent type: "; type.dump(llvm::errs());
+      llvm::errs() << "GenericSignatureBuilder says: " << gsbResult << "\n";
+      if (gsbResult)
+        gsbResult.dump(llvm::errs());
+      llvm::errs() << "\n";
+      llvm::errs() << "RequirementMachine says: " << rqmResult << "\n";
+      if (rqmResult)
+        rqmResult.dump(llvm::errs());
+      llvm::errs() << "\n";
+      getRequirementMachine()->dump(llvm::errs());
+      abort();
+    }
+
+    return rqmResult;
+  }
+  }
 }
 
 /// Determine the set of protocols to which the given type parameter is
@@ -382,10 +566,15 @@ GenericSignatureImpl::getRequiredProtocols(Type type) const {
   };
 
   auto &ctx = getASTContext();
-  if (ctx.LangOpts.EnableRequirementMachine) {
-    auto rqmResult = computeViaRQM();
+  switch (ctx.LangOpts.EnableRequirementMachine) {
+  case RequirementMachineMode::Disabled:
+    return computeViaGSB();
 
-#ifndef NDEBUG
+  case RequirementMachineMode::Enabled:
+    return computeViaRQM();
+
+  case RequirementMachineMode::Verify: {
+    auto rqmResult = computeViaRQM();
     auto gsbResult = computeViaGSB();
 
     if (gsbResult != rqmResult) {
@@ -403,11 +592,9 @@ GenericSignatureImpl::getRequiredProtocols(Type type) const {
       getRequirementMachine()->dump(llvm::errs());
       abort();
     }
-#endif
 
     return rqmResult;
-  } else {
-    return computeViaGSB();
+  }
   }
 }
 
@@ -440,11 +627,16 @@ bool GenericSignatureImpl::requiresProtocol(Type type,
   };
 
   auto &ctx = getASTContext();
-  if (ctx.LangOpts.EnableRequirementMachine) {
-    bool rqmResult = computeViaRQM();
+  switch (ctx.LangOpts.EnableRequirementMachine) {
+  case RequirementMachineMode::Disabled:
+    return computeViaGSB();
 
-#ifndef NDEBUG
-    bool gsbResult = computeViaGSB();
+  case RequirementMachineMode::Enabled:
+    return computeViaRQM();
+
+  case RequirementMachineMode::Verify: {
+    auto rqmResult = computeViaRQM();
+    auto gsbResult = computeViaGSB();
 
     if (gsbResult != rqmResult) {
       llvm::errs() << "RequirementMachine::requiresProtocol() is broken\n";
@@ -457,11 +649,9 @@ bool GenericSignatureImpl::requiresProtocol(Type type,
       getRequirementMachine()->dump(llvm::errs());
       abort();
     }
-#endif
 
     return rqmResult;
-  } else {
-    return computeViaGSB();
+  }
   }
 }
 
@@ -486,11 +676,16 @@ bool GenericSignatureImpl::isConcreteType(Type type) const {
   };
 
   auto &ctx = getASTContext();
-  if (ctx.LangOpts.EnableRequirementMachine) {
-    bool rqmResult = computeViaRQM();
+  switch (ctx.LangOpts.EnableRequirementMachine) {
+  case RequirementMachineMode::Disabled:
+    return computeViaGSB();
 
-#ifndef NDEBUG
-    bool gsbResult = computeViaGSB();
+  case RequirementMachineMode::Enabled:
+    return computeViaRQM();
+
+  case RequirementMachineMode::Verify: {
+    auto rqmResult = computeViaRQM();
+    auto gsbResult = computeViaGSB();
 
     if (gsbResult != rqmResult) {
       llvm::errs() << "RequirementMachine::isConcreteType() is broken\n";
@@ -502,11 +697,9 @@ bool GenericSignatureImpl::isConcreteType(Type type) const {
       getRequirementMachine()->dump(llvm::errs());
       abort();
     }
-#endif
 
     return rqmResult;
-  } else {
-    return computeViaGSB();
+  }
   }
 }
 
@@ -516,14 +709,59 @@ bool GenericSignatureImpl::isConcreteType(Type type) const {
 Type GenericSignatureImpl::getConcreteType(Type type) const {
   assert(type->isTypeParameter() && "Expected a type parameter");
 
-  auto &builder = *getGenericSignatureBuilder();
-  auto equivClass =
+  auto computeViaGSB = [&]() -> Type {
+    auto &builder = *getGenericSignatureBuilder();
+    auto equivClass =
     builder.resolveEquivalenceClass(
                                   type,
                                   ArchetypeResolutionKind::CompleteWellFormed);
-  if (!equivClass) return Type();
+    if (!equivClass) return nullptr;
 
-  return equivClass->concreteType;
+    return equivClass->concreteType;
+  };
+
+  auto computeViaRQM = [&]() {
+    auto *machine = getRequirementMachine();
+    return machine->getConcreteType(type);
+  };
+
+  auto &ctx = getASTContext();
+  switch (ctx.LangOpts.EnableRequirementMachine) {
+  case RequirementMachineMode::Disabled:
+    return computeViaGSB();
+
+  case RequirementMachineMode::Enabled:
+    return computeViaRQM();
+
+  case RequirementMachineMode::Verify: {
+    auto rqmResult = computeViaRQM();
+    auto gsbResult = computeViaGSB();
+
+    auto check = [&]() {
+      if (!gsbResult || !rqmResult)
+        return !gsbResult == !rqmResult;
+      return gsbResult->isEqual(rqmResult);
+    };
+
+    if (!check()) {
+      llvm::errs() << "RequirementMachine::getConcreteType() is broken\n";
+      llvm::errs() << "Generic signature: " << GenericSignature(this) << "\n";
+      llvm::errs() << "Dependent type: "; type.dump(llvm::errs());
+      llvm::errs() << "GenericSignatureBuilder says: " << gsbResult << "\n";
+      if (gsbResult)
+        gsbResult.dump(llvm::errs());
+      llvm::errs() << "\n";
+      llvm::errs() << "RequirementMachine says: " << rqmResult << "\n";
+      if (rqmResult)
+        rqmResult.dump(llvm::errs());
+      llvm::errs() << "\n";
+      getRequirementMachine()->dump(llvm::errs());
+      abort();
+    }
+
+    return rqmResult;
+  }
+  }
 }
 
 LayoutConstraint GenericSignatureImpl::getLayoutConstraint(Type type) const {
@@ -547,10 +785,15 @@ LayoutConstraint GenericSignatureImpl::getLayoutConstraint(Type type) const {
   };
 
   auto &ctx = getASTContext();
-  if (ctx.LangOpts.EnableRequirementMachine) {
-    auto rqmResult = computeViaRQM();
+  switch (ctx.LangOpts.EnableRequirementMachine) {
+  case RequirementMachineMode::Disabled:
+    return computeViaGSB();
 
-#ifndef NDEBUG
+  case RequirementMachineMode::Enabled:
+    return computeViaRQM();
+
+  case RequirementMachineMode::Verify: {
+    auto rqmResult = computeViaRQM();
     auto gsbResult = computeViaGSB();
 
     if (gsbResult != rqmResult) {
@@ -563,11 +806,9 @@ LayoutConstraint GenericSignatureImpl::getLayoutConstraint(Type type) const {
       getRequirementMachine()->dump(llvm::errs());
       abort();
     }
-#endif
 
     return rqmResult;
-  } else {
-    return computeViaGSB();
+  }
   }
 }
 
@@ -590,10 +831,15 @@ bool GenericSignatureImpl::areSameTypeParameterInContext(Type type1,
   };
 
   auto &ctx = getASTContext();
-  if (ctx.LangOpts.EnableRequirementMachine) {
-    auto rqmResult = computeViaRQM();
+  switch (ctx.LangOpts.EnableRequirementMachine) {
+  case RequirementMachineMode::Disabled:
+    return computeViaGSB();
 
-#ifndef NDEBUG
+  case RequirementMachineMode::Enabled:
+    return computeViaRQM();
+
+  case RequirementMachineMode::Verify: {
+    auto rqmResult = computeViaRQM();
     auto gsbResult = computeViaGSB();
 
     if (gsbResult != rqmResult) {
@@ -607,11 +853,9 @@ bool GenericSignatureImpl::areSameTypeParameterInContext(Type type1,
       getRequirementMachine()->dump(llvm::errs());
       abort();
     }
-#endif
 
     return rqmResult;
-  } else {
-    return computeViaGSB();
+  }
   }
 }
 
@@ -703,8 +947,42 @@ bool GenericSignatureImpl::isCanonicalTypeInContext(Type type) const {
   if (!type->hasTypeParameter())
     return true;
 
-  auto &builder = *getGenericSignatureBuilder();
-  return isCanonicalTypeInContext(type, builder);
+  auto computeViaGSB = [&]() {
+    auto &builder = *getGenericSignatureBuilder();
+    return isCanonicalTypeInContext(type, builder);
+  };
+
+  auto computeViaRQM = [&]() {
+    auto *machine = getRequirementMachine();
+    return machine->isCanonicalTypeInContext(type);
+  };
+
+  auto &ctx = getASTContext();
+  switch (ctx.LangOpts.EnableRequirementMachine) {
+  case RequirementMachineMode::Disabled:
+    return computeViaGSB();
+
+  case RequirementMachineMode::Enabled:
+    return computeViaRQM();
+
+  case RequirementMachineMode::Verify: {
+    auto rqmResult = computeViaRQM();
+    auto gsbResult = computeViaGSB();
+
+    if (gsbResult != rqmResult) {
+      llvm::errs() << "RequirementMachine::isCanonicalTypeInContext() is broken\n";
+      llvm::errs() << "Generic signature: " << GenericSignature(this) << "\n";
+      llvm::errs() << "Dependent type: "; type.dump(llvm::errs());
+      llvm::errs() << "\n";
+      llvm::errs() << "GenericSignatureBuilder says: " << gsbResult << "\n";
+      llvm::errs() << "RequirementMachine says: " << rqmResult << "\n";
+      getRequirementMachine()->dump(llvm::errs());
+      abort();
+    }
+
+    return rqmResult;
+  }
+  }
 }
 
 bool GenericSignatureImpl::isCanonicalTypeInContext(
@@ -754,10 +1032,15 @@ CanType GenericSignatureImpl::getCanonicalTypeInContext(Type type) const {
   };
 
   auto &ctx = getASTContext();
-  if (ctx.LangOpts.EnableRequirementMachine) {
-    auto rqmResult = computeViaRQM();
+  switch (ctx.LangOpts.EnableRequirementMachine) {
+  case RequirementMachineMode::Disabled:
+    return computeViaGSB();
 
-#ifndef NDEBUG
+  case RequirementMachineMode::Enabled:
+    return computeViaRQM();
+
+  case RequirementMachineMode::Verify: {
+    auto rqmResult = computeViaRQM();
     auto gsbResult = computeViaGSB();
 
     if (gsbResult != rqmResult) {
@@ -772,11 +1055,9 @@ CanType GenericSignatureImpl::getCanonicalTypeInContext(Type type) const {
       getRequirementMachine()->dump(llvm::errs());
       abort();
     }
-#endif
 
     return rqmResult;
-  } else {
-    return computeViaGSB();
+  }
   }
 }
 
@@ -791,8 +1072,129 @@ CanGenericSignature::getGenericParams() const{
 ConformanceAccessPath
 GenericSignatureImpl::getConformanceAccessPath(Type type,
                                                ProtocolDecl *protocol) const {
-  return getGenericSignatureBuilder()->getConformanceAccessPath(
-      type, protocol, this);
+  auto computeViaGSB = [&]() {
+    return getGenericSignatureBuilder()->getConformanceAccessPath(
+        type, protocol, this);
+  };
+
+  auto computeViaRQM = [&]() {
+    auto *machine = getRequirementMachine();
+    return machine->getConformanceAccessPath(type, protocol);
+  };
+
+  auto &ctx = getASTContext();
+  switch (ctx.LangOpts.EnableRequirementMachine) {
+  case RequirementMachineMode::Disabled:
+    return computeViaGSB();
+
+  case RequirementMachineMode::Enabled:
+    return computeViaRQM();
+
+  case RequirementMachineMode::Verify: {
+    auto rqmResult = computeViaRQM();
+    auto gsbResult = computeViaGSB();
+
+    auto compare = [&]() {
+      if (gsbResult.size() != rqmResult.size())
+        return false;
+
+      auto *begin1 = gsbResult.begin();
+      auto *end1 = gsbResult.end();
+      auto *begin2 = rqmResult.begin();
+      auto *end2 = rqmResult.end();
+
+      while (begin1 < end1) {
+        assert(begin2 < end2);
+
+        if (!begin1->first->isEqual(begin2->first))
+          return false;
+        if (begin1->second != begin2->second)
+          return false;
+
+        ++begin1;
+        ++begin2;
+      }
+
+      return true;
+    };
+
+    if (!compare()) {
+      llvm::errs() << "RequirementMachine::getConformanceAccessPath() is broken\n";
+      llvm::errs() << "Generic signature: " << GenericSignature(this) << "\n";
+      llvm::errs() << "Dependent type: "; type.dump(llvm::errs());
+      llvm::errs() << "Protocol: "; protocol->dumpRef(llvm::errs());
+      llvm::errs() << "\n";
+      llvm::errs() << "GenericSignatureBuilder says: ";
+      gsbResult.print(llvm::errs());
+      llvm::errs() << "\n";
+      llvm::errs() << "RequirementMachine says: ";
+      rqmResult.print(llvm::errs());
+      llvm::errs() << "\n\n";
+      getRequirementMachine()->dump(llvm::errs());
+      abort();
+    }
+
+    return rqmResult;
+  }
+  }
+}
+
+TypeDecl *
+GenericSignatureImpl::lookupNestedType(Type type, Identifier name) const {
+  assert(type->isTypeParameter());
+
+  auto computeViaGSB = [&]() -> TypeDecl * {
+    auto *builder = getGenericSignatureBuilder();
+    auto equivClass =
+      builder->resolveEquivalenceClass(
+                                  type,
+                                  ArchetypeResolutionKind::CompleteWellFormed);
+    if (!equivClass)
+      return nullptr;
+
+    return equivClass->lookupNestedType(*builder, name);
+  };
+
+  auto computeViaRQM = [&]() {
+    auto *machine = getRequirementMachine();
+    return machine->lookupNestedType(type, name);
+  };
+
+  auto &ctx = getASTContext();
+  switch (ctx.LangOpts.EnableRequirementMachine) {
+  case RequirementMachineMode::Disabled:
+    return computeViaGSB();
+
+  case RequirementMachineMode::Enabled:
+    return computeViaRQM();
+
+  case RequirementMachineMode::Verify: {
+    auto rqmResult = computeViaRQM();
+    auto gsbResult = computeViaGSB();
+
+    if (gsbResult != rqmResult) {
+      llvm::errs() << "RequirementMachine::lookupNestedType() is broken\n";
+      llvm::errs() << "Generic signature: " << GenericSignature(this) << "\n";
+      llvm::errs() << "Dependent type: "; type.dump(llvm::errs());
+      llvm::errs() << "GenericSignatureBuilder says: ";
+      if (gsbResult)
+        gsbResult->dumpRef(llvm::errs());
+      else
+        llvm::errs() << "<nullptr>";
+      llvm::errs() << "\n";
+      llvm::errs() << "RequirementMachine says: ";
+      if (rqmResult)
+        rqmResult->dumpRef(llvm::errs());
+      else
+        llvm::errs() << "<nullptr>";
+      llvm::errs() << "\n";
+      getRequirementMachine()->dump(llvm::errs());
+      abort();
+    }
+
+    return rqmResult;
+  }
+  }
 }
 
 unsigned GenericParamKey::findIndexIn(

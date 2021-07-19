@@ -35,7 +35,6 @@
 #include "swift/AST/Expr.h"
 #include "swift/AST/ForeignErrorConvention.h"
 #include "swift/AST/GenericEnvironment.h"
-#include "swift/AST/GenericSignatureBuilder.h"
 #include "swift/AST/Initializer.h"
 #include "swift/AST/NameLookup.h"
 #include "swift/AST/NameLookupRequests.h"
@@ -627,7 +626,9 @@ CheckRedeclarationRequest::evaluate(Evaluator &eval, ValueDecl *current) const {
     // Thwart attempts to override the same declaration more than once.
     const auto *currentOverride = current->getOverriddenDecl();
     const auto *otherOverride = other->getOverriddenDecl();
-    if (currentOverride && currentOverride == otherOverride) {
+    const auto *otherInit = dyn_cast<ConstructorDecl>(other);
+    if (currentOverride && currentOverride == otherOverride &&
+        !(otherInit && otherInit->isImplicit())) {
       current->diagnose(diag::multiple_override, current->getName());
       other->diagnose(diag::multiple_override_prev, other->getName());
       current->setInvalid();

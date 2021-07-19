@@ -2712,6 +2712,10 @@ static bool usesFeatureBuiltinContinuation(Decl *decl) {
   return false;
 }
 
+static bool usesFeatureBuiltinHopToActor(Decl *decl) {
+  return false;
+}
+
 static bool usesFeatureBuiltinTaskGroupWithArgument(Decl *decl) {
   return false;
 }
@@ -3427,7 +3431,9 @@ void PrintAST::visitAccessorDecl(AccessorDecl *decl) {
   printAttributes(decl);
   // Explicitly print 'mutating' and 'nonmutating' if needed.
   printMutabilityModifiersIfNeeded(decl);
-
+  if (decl->isConsuming()) {
+    Printer.printKeyword("__consuming", Options, " ");
+  }
   switch (auto kind = decl->getAccessorKind()) {
   case AccessorKind::Get:
   case AccessorKind::Address:
