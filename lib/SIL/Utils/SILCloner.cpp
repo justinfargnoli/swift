@@ -59,7 +59,23 @@ std::unique_ptr<SILModule> cloneModule(SILModule *originalModule) {
   }
 
   // copy the \c SILGlobalVariable initializers
-  // TODO
+  // Is this even needed? I'm unsure how to generate a program that uses 
+  // a global variables static initalizer. I would assume `let x = 1` would
+  // do the trick, but it doesn't look like it does. 
+  // https://github.com/apple/swift/blob/main/docs/OwnershipManifesto.md#non-copyable-types
+  // https://forums.swift.org/t/initializers-of-global-variables/34637
+  {
+    auto originalGlobal = originalModule->sil_global_begin();
+    auto newGlobal = newModule->sil_global_begin();
+    for (; originalGlobal != originalModule->sil_global_end() &&
+          newGlobal != newModule->sil_global_end(); ++originalGlobal, ++newGlobal) {
+      assert(originalGlobal->begin() == originalGlobal->end() && 
+          "Global static initalizer lists are not supported.");
+    }
+    assert(originalGlobal == originalModule->sil_global_end() && 
+          newGlobal == newModule->sil_global_end() && 
+          "`originalModule` and `newModule` sil global iterators are not of the same legnth.");
+  }
 
   // copy the bodies of the \c SILFunction s 
   {
@@ -67,12 +83,14 @@ std::unique_ptr<SILModule> cloneModule(SILModule *originalModule) {
     auto newFunction = newModule->begin();
     for (; originalFunction != originalModule->end() &&
           newFunction != newModule->end(); ++originalFunction, ++newFunction) {
-      SILFunctionCloner funcCloner(&*newFunction);
-      funcCloner.cloneFunction(&*originalFunction);
+      if (originalFunction->begin() != originalFunction->end()) {
+        SILFunctionCloner funcCloner(&*newFunction);
+        funcCloner.cloneFunction(&*originalFunction);
+      }
     }
     assert(originalFunction == originalModule->end() && 
           newFunction == newModule->end() && 
-          "`originalModule` and `newModule` are not of the same legnth.");
+          "`originalModule` and `newModule` function iterators are not of the same legnth.");
   }
 
   return newModule;

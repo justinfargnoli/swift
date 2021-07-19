@@ -152,32 +152,39 @@ SILModule::~SILModule() {
 }
 
 void SILModule::checkForLeaks() const {
-  int instsInModule = std::distance(scheduledForDeletion.begin(),
-                                    scheduledForDeletion.end());
-  for (const SILFunction &F : *this) {
-    for (const SILBasicBlock &block : F) {
-      instsInModule += std::distance(block.begin(), block.end());
-    }
-  }
-  for (const SILFunction &F : zombieFunctions) {
-    for (const SILBasicBlock &block : F) {
-      instsInModule += std::distance(block.begin(), block.end());
-    }
-  }
-  for (const SILGlobalVariable &global : getSILGlobals()) {
-      instsInModule += std::distance(global.StaticInitializerBlock.begin(),
-                                     global.StaticInitializerBlock.end());
-  }
+  // FIXME: This check doesn't account for the fact that we have cloned the 
+  // SILModule. It uses `static int`s (via SILInstruction) to count the number 
+  // of instructions created and deleted by the entire program and compares that
+  // to the instruction in the SILModule. To be correct, it should only count the
+  // number of instructions created and deleted for use in this specific 
+  // SILModule.
+  //
+  // int instsInModule = std::distance(scheduledForDeletion.begin(),
+  //                                   scheduledForDeletion.end());
+  // for (const SILFunction &F : *this) {
+  //   for (const SILBasicBlock &block : F) {
+  //     instsInModule += std::distance(block.begin(), block.end());
+  //   }
+  // }
+  // for (const SILFunction &F : zombieFunctions) {
+  //   for (const SILBasicBlock &block : F) {
+  //     instsInModule += std::distance(block.begin(), block.end());
+  //   }
+  // }
+  // for (const SILGlobalVariable &global : getSILGlobals()) {
+  //     instsInModule += std::distance(global.StaticInitializerBlock.begin(),
+  //                                    global.StaticInitializerBlock.end());
+  // }
   
-  int numAllocated = SILInstruction::getNumCreatedInstructions() -
-                       SILInstruction::getNumDeletedInstructions();
+  // int numAllocated = SILInstruction::getNumCreatedInstructions() -
+  //                      SILInstruction::getNumDeletedInstructions();
                        
-  if (numAllocated != instsInModule) {
-    llvm::errs() << "Leaking instructions!\n";
-    llvm::errs() << "Alloated instructions: " << numAllocated << '\n';
-    llvm::errs() << "Instructions in module: " << instsInModule << '\n';
-    llvm_unreachable("leaking instructions");
-  }
+  // if (numAllocated != instsInModule) {
+  //   llvm::errs() << "Leaking instructions!\n";
+  //   llvm::errs() << "Alloated instructions: " << numAllocated << '\n';
+  //   llvm::errs() << "Instructions in module: " << instsInModule << '\n';
+  //   llvm_unreachable("leaking instructions");
+  // }
   
   assert(PlaceholderValue::getNumPlaceholderValuesAlive() == 0 &&
          "leaking placeholders");
@@ -187,13 +194,15 @@ void SILModule::checkForLeaksAfterDestruction() {
 // Disabled in release (non-assert) builds because this check fails in rare
 // cases in lldb, causing crashes. rdar://70826934
 #ifndef NDEBUG
-  int numAllocated = SILInstruction::getNumCreatedInstructions() -
-                     SILInstruction::getNumDeletedInstructions();
+  // FIXME: See the FIXME in the above function.
+  //
+  // int numAllocated = SILInstruction::getNumCreatedInstructions() -
+  //                    SILInstruction::getNumDeletedInstructions();
 
-  if (numAllocated != 0) {
-    llvm::errs() << "Leaking " << numAllocated << " instructions!\n";
-    llvm_unreachable("leaking instructions");
-  }
+  // if (numAllocated != 0) {
+  //   llvm::errs() << "Leaking " << numAllocated << " instructions!\n";
+  //   llvm_unreachable("leaking instructions");
+  // }
 #endif
 }
 

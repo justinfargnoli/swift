@@ -37,7 +37,7 @@ void lowerSIL(SILModule &SILMod) {
     runSILLoweringPasses(SILMod);
     break;
   case SILStage::Lowered:
-    break;
+    llvm_unreachable("Not reachable, all cases handled");
  }
  assert(SILMod.getStage() == SILStage::Lowered && "SILStage must be Lowered");
 }
@@ -60,19 +60,14 @@ IR::Function *aliveIRGen(llvm::Function &F, llvm::Triple triple) {
       std::vector<std::string_view>()).getPointer();
 }
 
-bool SILAliveLLVM(SILModule *M) { 
+bool SILAliveLLVM(SILModule *M) {
   std::unique_ptr<SILModule> SILMod(M);
 
-  // FIXME: don't allow clone to be run on SILStage::Lowered
   // Clone the SIL Module
+  assert(SILMod->getStage() != SILStage::Lowered &&
+         "SILAliveLLVM doesn't support SILStage::Lowered");
   auto SILModClone = cloneModule(SILMod.get());
-  // TODO: Remove
-  llvm::errs() << "\n- BEFORE SILMod dump\n";
-  SILMod->dump(); 
-  llvm::errs() << "\n- AFTER SILMod dump\n";
-  llvm::errs() << "\n- BEFORE SILModClone dump\n";
-  SILModClone->dump(); 
-  llvm::errs() << "\n- AFTER SILModClone dump\n";
+
   // Generate LLVM IR for the SILModule
   GeneratedModule generatedModule = genIR(std::move(SILModClone));
   llvm::Module *IRMod = generatedModule.getModule();
@@ -91,13 +86,13 @@ bool SILAliveLLVM(SILModule *M) {
       "The must be at least one function in the IR module.");
   llvm::Function *functionLLVM = &*begin;
 
-  // Lower LLVM IR to Alive IR
+  Lower LLVM IR to Alive IR
   auto functionAlive = aliveIRGen(*functionLLVM, 
       generatedModule.getTargetMachine()->getTargetTriple());
-  assert(!functionAlive && "AliveIRGen failed");
+  assert(functionAlive && "AliveIRGen failed");
 
   // Store Alive IR in ASTContext
   // TODO
 
-  return false; 
+  return true; 
 }
