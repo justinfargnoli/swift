@@ -70,12 +70,10 @@ IR::Function *aliveIRGen(llvm::Function &F, const llvm::DataLayout &dataLayout,
 }
 
 bool SILAliveLLVM(SILModule *M) {
-  std::unique_ptr<SILModule> SILMod(M);
-
   // Clone the SIL Module
-  assert(SILMod->getStage() != SILStage::Lowered &&
+  assert(M->getStage() != SILStage::Lowered &&
          "SILAliveLLVM doesn't support SILStage::Lowered");
-  auto SILModClone = cloneModule(SILMod.get());
+  auto SILModClone = cloneModule(M);
 
   // Generate LLVM IR for the SILModule
   GeneratedModule generatedModule = genIR(std::move(SILModClone));
