@@ -24,6 +24,8 @@
 #include "swift/Subsystems.h"
 #include "swift/TBDGen/TBDGen.h"
 
+#include <iostream>
+
 using namespace swift;
 
 // Lower the SILModule to the Lowered stage so that it's ready to be 
@@ -54,7 +56,14 @@ GeneratedModule genIR(std::unique_ptr<SILModule> SILMod) {
       /*parallelOutputFilenames=*/ {}, &HashGlobal);
 }
 
-IR::Function *aliveIRGen(llvm::Function &F, llvm::Triple triple) {
+IR::Function *aliveIRGen(llvm::Function &F, const llvm::DataLayout &dataLayout, 
+      llvm::Triple triple) {
+  // FIXME: There may be a problem with calling `llvm_util::initializer` more 
+  // than once during program execution
+  //
+  // Initialize llvm_util
+  llvm_util::initializer llvm_util_init(std::cerr, dataLayout);
+
   return llvm_util::llvm2alive(F, 
       llvm::TargetLibraryInfo{llvm::TargetLibraryInfoImpl{triple}}, 
       std::vector<std::string_view>()).getPointer();
@@ -73,11 +82,6 @@ bool SILAliveLLVM(SILModule *M) {
   llvm::Module *IRMod = generatedModule.getModule();
   assert(IRMod && "IR module generation failed.");
 
-  // TODO: Remove
-  llvm::errs() << "\n- BEFORE IRMod dump\n";
-  IRMod->dump(); 
-  llvm::errs() << "\n- AFTER IRMod dump\n";
-
   // The version of this tool that translated SIL to Alive IR directly 
   // will be a \c SILFunctionTransform instead of a \c SILModuleTransform.
   // So, for simplicity, only consider the first function.
@@ -86,8 +90,8 @@ bool SILAliveLLVM(SILModule *M) {
       "The must be at least one function in the IR module.");
   llvm::Function *functionLLVM = &*begin;
 
-  Lower LLVM IR to Alive IR
-  auto functionAlive = aliveIRGen(*functionLLVM, 
+  // Lower LLVM IR to Alive IR
+  auto functionAlive = aliveIRGen(*functionLLVM, IRMod->getDataLayout(),
       generatedModule.getTargetMachine()->getTargetTriple());
   assert(functionAlive && "AliveIRGen failed");
 
