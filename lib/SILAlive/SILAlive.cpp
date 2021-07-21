@@ -10,6 +10,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include <iostream>
+
 #include "llvm_util/llvm2alive.h"
 
 #include "llvm/Analysis/TargetLibraryInfo.h"
@@ -23,8 +25,6 @@
 #include "swift/SILOptimizer/PassManager/Passes.h"
 #include "swift/Subsystems.h"
 #include "swift/TBDGen/TBDGen.h"
-
-#include <iostream>
 
 namespace swift {
 
@@ -76,8 +76,8 @@ bool SILAliveLLVM(SILModule *M) {
   auto SILModClone = cloneModule(M);
 
   // Generate LLVM IR for the SILModule
-  GeneratedModule generatedModule = genIR(std::move(SILModClone));
-  llvm::Module *IRMod = generatedModule.getModule();
+  auto generatedModule = genIR(std::move(SILModClone));
+  auto IRMod = generatedModule.getModule();
   assert(IRMod && "IR module generation failed.");
 
   // The version of this tool that translated SIL to Alive IR directly 
