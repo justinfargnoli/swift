@@ -26,7 +26,7 @@
 
 #include <iostream>
 
-using namespace swift;
+namespace swift {
 
 // Lower the SILModule to the Lowered stage so that it's ready to be 
 // lowered to LLVM IR.
@@ -98,3 +98,5 @@ bool SILAliveLLVM(SILModule *M) {
 
   return true; 
 }
+
+} 

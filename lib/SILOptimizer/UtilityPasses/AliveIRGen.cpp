@@ -19,7 +19,7 @@ namespace {
 
 class AliveIRGen : public SILModuleTransform {
   void run() override { 
-    auto result = SILAliveLLVM(getModule()); 
+    auto result = swift::SILAliveLLVM(getModule()); 
     assert(result); 
   }
 };

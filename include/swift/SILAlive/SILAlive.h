@@ -10,10 +10,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-// FIXME: add include gaurds
+#ifndef SWIFT_SILALIVE_H
+#define SWIFT_SILALIVE_H
 
 #include "swift/SIL/SILModule.h"
 
-using namespace swift;
+namespace swift {
 
 bool SILAliveLLVM(SILModule *M);
+
+}
+
+#endif // SWIFT_SILALIVE_H
