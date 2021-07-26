@@ -10,12 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <iostream>
-
-#include "llvm_util/llvm2alive.h"
-
-#include "llvm/Analysis/TargetLibraryInfo.h"
-
 #include "swift/AST/IRGenOptions.h"
 #include "swift/AST/IRGenRequests.h"
 #include "swift/Basic/PrimarySpecificPaths.h"
@@ -25,8 +19,20 @@
 #include "swift/SILOptimizer/PassManager/Passes.h"
 #include "swift/Subsystems.h"
 #include "swift/TBDGen/TBDGen.h"
+#include "llvm/Analysis/TargetLibraryInfo.h"
+#include "llvm_util/llvm2alive.h"
+#include <iostream>
 
 namespace swift {
+
+void AliveModule::pushFunction(std::unique_ptr<IR::Function> function) {
+  assert(function && "Cannot add a `nullptr` `IR::Function`");
+  functions.push_back(std::move(function));
+}
+
+llvm::Optional<std::unique_ptr<AliveModule>> &SILAliveContext::aliveModule() {
+  return aliveMod;
+}
 
 // Lower the SILModule to the Lowered stage so that it's ready to be 
 // lowered to LLVM IR.
@@ -44,8 +50,9 @@ void lowerSIL(SILModule &SILMod) {
  assert(SILMod.getStage() == SILStage::Lowered && "SILStage must be Lowered");
 }
 
-GeneratedModule genIR(std::unique_ptr<SILModule> SILMod) {
+GeneratedModule genLLVMIR(std::unique_ptr<SILModule> SILMod) {
   // Lower \p SILMod to SILStage::Lowered
+  assert(SILMod && "Cannot generate LLVM IR from a nullptr.");
   lowerSIL(*SILMod);
 
   // Generate LLVM IR for the \p SILMod
@@ -56,45 +63,72 @@ GeneratedModule genIR(std::unique_ptr<SILModule> SILMod) {
       /*parallelOutputFilenames=*/ {}, &HashGlobal);
 }
 
-IR::Function *aliveIRGen(llvm::Function &F, const llvm::DataLayout &dataLayout, 
+std::unique_ptr<IR::Function> aliveIRFunctionGen(llvm::Function &F, 
+      const llvm::DataLayout &dataLayout, 
       llvm::Triple triple) {
-  // FIXME: There may be a problem with calling `llvm_util::initializer` more 
+  // NOTE: There may be a problem with calling `llvm_util::initializer` more 
   // than once during program execution
   //
   // Initialize llvm_util
   llvm_util::initializer llvm_util_init(std::cerr, dataLayout);
 
-  return llvm_util::llvm2alive(F, 
+  auto functionAlivePtr = llvm_util::llvm2alive(F, 
       llvm::TargetLibraryInfo{llvm::TargetLibraryInfoImpl{triple}}, 
       std::vector<std::string_view>()).getPointer();
+
+  return std::unique_ptr<IR::Function>(functionAlivePtr);
 }
 
-bool SILAliveLLVM(SILModule *M) {
+std::unique_ptr<AliveModule> aliveIRGen(GeneratedModule generatedModule) {
+  auto aliveModule = std::make_unique<AliveModule>();
+
+  auto LLVMIRMod = generatedModule.getModule();
+  assert(LLVMIRMod && "No LLVM IR Module found.");
+  
+  for (auto &functionLLVM : *LLVMIRMod) {
+    // Lower LLVM function IR to Alive function IR
+    auto functionAlive = aliveIRFunctionGen(functionLLVM, 
+        LLVMIRMod->getDataLayout(),
+        generatedModule.getTargetMachine()->getTargetTriple());
+    assert(functionAlive && "aliveIRFunctionGen failed.");
+    
+    // Add `functionAlive` to the `aliveModule`
+    aliveModule->pushFunction(std::move(functionAlive));
+  }
+  
+  return aliveModule;
+}
+
+std::unique_ptr<AliveModule> aliveIRGen(SILModule *SILMod) {
   // Clone the SIL Module
-  assert(M->getStage() != SILStage::Lowered &&
-         "SILAliveLLVM doesn't support SILStage::Lowered");
-  auto SILModClone = cloneModule(M);
+  assert(SILMod->getStage() != SILStage::Lowered &&
+         "SILAliveLLVM doesn't support SILStage::Lowered.");
+  auto SILModClone = cloneModule(SILMod);
 
   // Generate LLVM IR for the SILModule
-  auto generatedModule = genIR(std::move(SILModClone));
-  auto IRMod = generatedModule.getModule();
-  assert(IRMod && "IR module generation failed.");
+  auto generatedModule = genLLVMIR(std::move(SILModClone));
+  assert(generatedModule.getModule() && "IR module generation failed.");
 
-  // The version of this tool that translated SIL to Alive IR directly 
-  // will be a \c SILFunctionTransform instead of a \c SILModuleTransform.
-  // So, for simplicity, only consider the first function.
-  auto begin = IRMod->begin();
-  assert(begin != IRMod->end() && 
-      "The must be at least one function in the IR module.");
-  llvm::Function *functionLLVM = &*begin;
+  return aliveIRGen(std::move(generatedModule));
+}
 
-  // Lower LLVM IR to Alive IR
-  auto functionAlive = aliveIRGen(*functionLLVM, IRMod->getDataLayout(),
-      generatedModule.getTargetMachine()->getTargetTriple());
-  assert(functionAlive && "AliveIRGen failed");
+bool SILAliveLLVM(SILModule *SILMod) {
+  auto aliveModule = aliveIRGen(SILMod);
 
-  // Store Alive IR in ASTContext
-  // TODO
+  auto &contextAliveModule = SILMod->getASTContext().getSILAliveContext()
+      .aliveModule();
+  if (contextAliveModule.hasValue()) {
+    // With the source `contextAliveModule.getValue()` and target `aliveModule`
+    // run translation validation
+    // TODO: ^
+  } 
+
+  // Put \p aliveModule into \c AliveModule put to either
+  // - replace `None` with an \c AliveModule 
+  // - replace the existing \c AliveModule
+  // so that the next time this function is invoked it can be used as the source
+  // of translation validation. 
+  contextAliveModule = std::move(aliveModule);
 
   return true; 
 }

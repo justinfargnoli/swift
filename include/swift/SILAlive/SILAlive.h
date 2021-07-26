@@ -10,15 +10,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef SWIFT_SILALIVE_H
-#define SWIFT_SILALIVE_H
+#ifndef SWIFT_SILALIVE_SILALIVE_H
+#define SWIFT_SILALIVE_SILALIVE_H
 
 #include "swift/SIL/SILModule.h"
+#include "swift/SILAlive/SILAliveASTContext.h"
 
 namespace swift {
 
 bool SILAliveLLVM(SILModule *M);
 
-}
+} 
 
-#endif // SWIFT_SILALIVE_H
+#endif // SWIFT_SILALIVE_SILALIVE_H

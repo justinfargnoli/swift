@@ -526,6 +526,8 @@ struct ASTContext::Implementation {
 
   Optional<ClangTypeConverter> Converter;
 
+  SILAliveContext silAliveContext;
+
   /// The IRGen specific SIL transforms that have been registered.
   SILTransformCtors IRGenSILPasses;
 
@@ -4829,6 +4831,10 @@ Type ASTContext::getBridgedToObjC(const DeclContext *dc, Type type,
 
   // No special bridging to Objective-C, but this can become an 'Any'.
   return Type();
+}
+
+SILAliveContext &ASTContext::getSILAliveContext() {
+  return getImpl().silAliveContext;
 }
 
 ClangTypeConverter &ASTContext::getClangTypeConverter() {

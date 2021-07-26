@@ -28,6 +28,7 @@
 #include "swift/Basic/LangOptions.h"
 #include "swift/Basic/Located.h"
 #include "swift/Basic/Malloc.h"
+#include "swift/SILAlive/SILAliveASTContext.h"
 #include "swift/SymbolGraphGen/SymbolGraphOptions.h"
 #include "clang/AST/DeclTemplate.h"
 #include "llvm/ADT/ArrayRef.h"
@@ -634,6 +635,8 @@ public:
   /// which will usually by the same as \c type.
   Type getBridgedToObjC(const DeclContext *dc, Type type,
                         Type *bridgedValueType = nullptr) const;
+
+  SILAliveContext &getSILAliveContext();
 
 private:
   ClangTypeConverter &getClangTypeConverter();
