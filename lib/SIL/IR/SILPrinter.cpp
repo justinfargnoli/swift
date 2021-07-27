@@ -472,17 +472,17 @@ static void printSILFunctionNameAndType(
   function->printName(OS);
   OS << " : $";
   auto *genEnv = function->getGenericEnvironment();
-  const GenericSignatureImpl *genSig = nullptr;
+  GenericSignature genSig;
 
   // If `genEnv` is defined, get sugared names of generic
   // parameter types for printing.
   if (genEnv) {
-    genSig = genEnv->getGenericSignature().getPointer();
+    genSig = genEnv->getGenericSignature();
 
     llvm::DenseSet<Identifier> usedNames;
     llvm::SmallString<16> disambiguatedNameBuf;
     unsigned disambiguatedNameCounter = 1;
-    for (auto *paramTy : genSig->getGenericParams()) {
+    for (auto *paramTy : genSig.getGenericParams()) {
       // Get a uniqued sugared name for the generic parameter type.
       auto sugaredTy = genEnv->getGenericSignature()->getSugaredType(paramTy);
       Identifier name = sugaredTy->getName();
@@ -506,7 +506,7 @@ static void printSILFunctionNameAndType(
     }
   }
   auto printOptions = PrintOptions::printSIL(silPrintContext);
-  printOptions.GenericSig = genSig;
+  printOptions.GenericSig = genSig.getPointer();
   printOptions.AlternativeTypeNames =
       sugaredTypeNames.empty() ? nullptr : &sugaredTypeNames;
   function->getLoweredFunctionType()->print(OS, printOptions);
@@ -1143,16 +1143,67 @@ public:
     }
   }
 
-  void printDebugVar(Optional<SILDebugVariable> Var) {
+  void printDebugInfoExpression(const SILDebugInfoExpression &DIExpr) {
+    assert(DIExpr && "DIExpression empty?");
+    *this << ", expr ";
+    bool IsFirst = true;
+    for (const auto &E : DIExpr.elements()) {
+      if (IsFirst)
+        IsFirst = false;
+      else
+        *this << ":";
+
+      switch (E.getKind()) {
+      case SILDIExprElement::OperatorKind: {
+        SILDIExprOperator Op = E.getAsOperator();
+        assert(Op != SILDIExprOperator::INVALID &&
+               "Invalid SILDIExprOperator kind");
+        *this << SILDIExprInfo::get(Op)->OpText;
+        break;
+      }
+      case SILDIExprElement::DeclKind: {
+        const Decl *D = E.getAsDecl();
+        // FIXME: Can we generalize this special handling for VarDecl
+        // to other kinds of Decl?
+        if (const auto *VD = dyn_cast<VarDecl>(D)) {
+          *this << "#";
+          printFullContext(VD->getDeclContext(), PrintState.OS);
+          *this << VD->getName().get();
+        } else
+          D->print(PrintState.OS, PrintState.ASTOptions);
+        break;
+      }
+      }
+    }
+  }
+
+  void printDebugVar(Optional<SILDebugVariable> Var,
+                     const SourceManager *SM = nullptr) {
     if (!Var || Var->Name.empty())
       return;
     if (Var->Constant)
       *this << ", let";
     else
       *this << ", var";
-    *this << ", name \"" << Var->Name << '"';
+
+    if ((Var->Loc || Var->Scope) && SM) {
+      *this << ", (name \"" << Var->Name << '"';
+      if (Var->Loc)
+        printDebugLocRef(*Var->Loc, *SM);
+      if (Var->Scope)
+        printDebugScopeRef(Var->Scope, *SM);
+      *this << ")";
+    } else
+      *this << ", name \"" << Var->Name << '"';
+
     if (Var->ArgNo)
       *this << ", argno " << Var->ArgNo;
+    if (Var->Type) {
+      *this << ", type ";
+      Var->Type->print(PrintState.OS, PrintState.ASTOptions);
+    }
+    if (Var->DIExpr)
+      printDebugInfoExpression(Var->DIExpr);
   }
 
   void visitAllocStackInst(AllocStackInst *AVI) {
@@ -1207,7 +1258,7 @@ public:
 
     *this << '<';
     bool first = true;
-    for (auto gp : genericSig->getGenericParams()) {
+    for (auto gp : genericSig.getGenericParams()) {
       if (first) first = false;
       else *this << ", ";
 
@@ -1518,12 +1569,14 @@ public:
     if (DVI->poisonRefs())
       *this << "[poison] ";
     *this << getIDAndType(DVI->getOperand());
-    printDebugVar(DVI->getVarInfo());
+    printDebugVar(DVI->getVarInfo(),
+                  &DVI->getModule().getASTContext().SourceMgr);
   }
 
   void visitDebugValueAddrInst(DebugValueAddrInst *DVAI) {
     *this << getIDAndType(DVAI->getOperand());
-    printDebugVar(DVAI->getVarInfo());
+    printDebugVar(DVAI->getVarInfo(),
+                  &DVAI->getModule().getASTContext().SourceMgr);
   }
 
 #define NEVER_OR_SOMETIMES_LOADABLE_CHECKED_REF_STORAGE(Name, ...) \
@@ -3595,7 +3648,7 @@ void SILSpecializeAttr::print(llvm::raw_ostream &OS) const {
           genericSig);
       requirements = requirementsScratch;
     } else {
-      requirements = specializedSig->getRequirements();
+      requirements = specializedSig.getRequirements();
     }
   }
   if (targetFunction) {

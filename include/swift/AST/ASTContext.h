@@ -113,7 +113,6 @@ namespace swift {
   class TupleTypeElt;
   class EnumElementDecl;
   class ProtocolDecl;
-  class RequirementMachine;
   class SubstitutableType;
   class SourceManager;
   class ValueDecl;
@@ -134,6 +133,10 @@ namespace swift {
 
 namespace namelookup {
   class ImportCache;
+}
+
+namespace rewriting {
+  class RequirementMachine;
 }
 
 namespace syntax {
@@ -1163,7 +1166,7 @@ public:
 
   /// Retrieve or create a term rewriting system for answering queries on
   /// type parameters written against the given generic signature.
-  RequirementMachine *getOrCreateRequirementMachine(
+  rewriting::RequirementMachine *getOrCreateRequirementMachine(
       CanGenericSignature sig);
 
   /// Retrieve a generic signature with a single unconstrained type parameter,

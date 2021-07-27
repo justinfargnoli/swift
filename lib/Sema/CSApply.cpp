@@ -547,7 +547,7 @@ namespace {
       }
 
       auto sig = gft->getGenericSignature();
-      auto *env = sig->getGenericEnvironment();
+      auto *env = sig.getGenericEnvironment();
 
       witnessType = FunctionType::get(gft->getParams(),
                                       gft->getResult(),
@@ -2450,7 +2450,7 @@ namespace {
       auto subMap = SubstitutionMap::get(
           genericSig,
           [&](SubstitutableType *type) -> Type {
-            assert(type->isEqual(genericSig->getGenericParams()[0]));
+            assert(type->isEqual(genericSig.getGenericParams()[0]));
             return valueType;
           },
           [&](CanType origType, Type replacementType,
@@ -7891,6 +7891,15 @@ static std::pair<Expr *, unsigned> getPrecedenceParentAndIndex(Expr *expr,
   }
   Expr *parent = it->second;
 
+  // Look through an unresolved chain wrapper expr, as it has no effect on
+  // precedence.
+  if (isa<UnresolvedMemberChainResultExpr>(parent)) {
+    it = parentMap.find(parent);
+    if (it == parentMap.end())
+      return {nullptr, 0};
+    parent = it->second;
+  }
+
   // Handle all cases where the answer isn't just going to be { parent, 0 }.
   if (auto tuple = dyn_cast<TupleExpr>(parent)) {
     // Get index of expression in tuple.
@@ -7970,13 +7979,13 @@ bool swift::exprNeedsParensOutsideFollowingOperator(
   Expr *parent;
   unsigned index;
   std::tie(parent, index) = getPrecedenceParentAndIndex(expr, rootExpr);
-  if (!parent || isa<TupleExpr>(parent)) {
+  if (!parent)
     return false;
-  }
 
-  if (auto parenExp = dyn_cast<ParenExpr>(parent))
-    if (!parenExp->isImplicit())
+  if (isa<ParenExpr>(parent) || isa<TupleExpr>(parent)) {
+    if (!parent->isImplicit())
       return false;
+  }
 
   if (parent->isInfixOperator()) {
     auto parentPG = TypeChecker::lookupPrecedenceGroupForInfixOperator(DC,
@@ -8901,8 +8910,9 @@ bool Solution::hasType(ASTNode node) const {
 }
 
 bool Solution::hasType(const KeyPathExpr *KP, unsigned ComponentIndex) const {
-  auto &cs = getConstraintSystem();
-  return cs.hasType(KP, ComponentIndex);
+  assert(KP && "Expected non-null key path parameter!");
+  return keyPathComponentTypes.find(std::make_pair(KP, ComponentIndex))
+            != keyPathComponentTypes.end();
 }
 
 Type Solution::getType(ASTNode node) const {
@@ -8912,6 +8922,11 @@ Type Solution::getType(ASTNode node) const {
 
   auto &cs = getConstraintSystem();
   return cs.getType(node);
+}
+
+Type Solution::getType(const KeyPathExpr *KP, unsigned I) const {
+  assert(hasType(KP, I) && "Expected type to have been set!");
+  return keyPathComponentTypes.find(std::make_pair(KP, I))->second;
 }
 
 Type Solution::getResolvedType(ASTNode node) const {

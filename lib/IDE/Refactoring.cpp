@@ -3709,7 +3709,7 @@ static CallExpr *findTrailingClosureTarget(
     return nullptr;
   CallExpr *CE = cast<CallExpr>(contexts.back().get<Expr*>());
 
-  if (CE->hasTrailingClosure())
+  if (CE->getUnlabeledTrailingClosureIndex().hasValue())
     // Call expression already has a trailing closure.
     return nullptr;
 
@@ -5943,7 +5943,7 @@ public:
     FuncDecl *FD = cast<FuncDecl>(StartNode.get<Decl *>());
 
     OS << tok::l_brace << "\n"; // start function body
-    OS << "async " << tok::l_brace << "\n";
+    OS << "Task " << tok::l_brace << "\n";
     addHoistedNamedCallback(FD, TopHandler, TopHandler.getNameStr(), [&]() {
       if (TopHandler.HasError) {
         OS << tok::kw_try << " ";
@@ -5952,7 +5952,7 @@ public:
       addCallToAsyncMethod(FD, TopHandler);
     });
     OS << "\n";
-    OS << tok::r_brace << "\n"; // end 'async'
+    OS << tok::r_brace << "\n"; // end 'Task'
     OS << tok::r_brace << "\n"; // end function body
     return true;
   }
@@ -7596,17 +7596,32 @@ private:
     OS << tok::r_paren;
   }
 
-  /// If the error type of \p HandlerDesc is more specialized than \c Error,
-  /// adds an 'as! CustomError' cast to the more specialized error type to the
-  /// output stream.
-  void
-  addCastToCustomErrorTypeIfNecessary(const AsyncHandlerDesc &HandlerDesc) {
-    const ASTContext &Ctx = HandlerDesc.getHandler()->getASTContext();
+  /// Adds a forwarded error argument to a completion handler call. If the error
+  /// type of \p HandlerDesc is more specialized than \c Error, an
+  /// 'as! CustomError' cast to the more specialized error type will be added to
+  /// the output stream.
+  void addForwardedErrorArgument(StringRef ErrorName,
+                                 const AsyncHandlerDesc &HandlerDesc) {
+    // If the error type is already Error, we can pass it as-is.
     auto ErrorType = *HandlerDesc.getErrorType();
-    if (ErrorType->getCanonicalType() != Ctx.getExceptionType()) {
-      OS << " " << tok::kw_as << tok::exclaim_postfix << " ";
-      ErrorType->lookThroughSingleOptionalType()->print(OS);
+    if (ErrorType->getCanonicalType() == getASTContext().getExceptionType()) {
+      OS << ErrorName;
+      return;
     }
+
+    // Otherwise we need to add a force cast to the destination custom error
+    // type. If this is for an Error? parameter, we'll need to add parens around
+    // the cast to silence a compiler warning about force casting never
+    // producing nil.
+    auto RequiresParens = HandlerDesc.getErrorParam().hasValue();
+    if (RequiresParens)
+      OS << tok::l_paren;
+
+    OS << ErrorName << " " << tok::kw_as << tok::exclaim_postfix << " ";
+    ErrorType->lookThroughSingleOptionalType()->print(OS);
+
+    if (RequiresParens)
+      OS << tok::r_paren;
   }
 
   /// If \p T has a natural default value like \c nil for \c Optional or \c ()
@@ -7637,8 +7652,7 @@ private:
     if (HandlerDesc.HasError && Index == HandlerDesc.params().size() - 1) {
       // The error parameter is the last argument of the completion handler.
       if (ResultName.empty()) {
-        OS << "error";
-        addCastToCustomErrorTypeIfNecessary(HandlerDesc);
+        addForwardedErrorArgument("error", HandlerDesc);
       } else {
         addDefaultValueOrPlaceholder(HandlerDesc.params()[Index].getPlainType());
       }
@@ -7661,7 +7675,7 @@ private:
         // causes the following legacy body to be created:
         //
         // func foo(completion: (String, Int) -> Void) {
-        //   async {
+        //   Task {
         //     let result = await foo()
         //     completion(result.0, result.1)
         //   }
@@ -7707,8 +7721,8 @@ private:
         OS << tok::period_prefix << "success" << tok::l_paren << ResultName
            << tok::r_paren;
       } else {
-        OS << tok::period_prefix << "failure" << tok::l_paren << "error";
-        addCastToCustomErrorTypeIfNecessary(HandlerDesc);
+        OS << tok::period_prefix << "failure" << tok::l_paren;
+        addForwardedErrorArgument("error", HandlerDesc);
         OS << tok::r_paren;
       }
       break;
@@ -7745,7 +7759,7 @@ private:
   /// we generate
   /// \code
   /// func foo<GenericParam>(completion: (GenericParam) -> Void) {
-  ///   async {
+  ///   Task {
   ///     let result: GenericParam = await foo()
   ///               <------------>
   ///     completion(result)

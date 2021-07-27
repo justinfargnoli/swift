@@ -1,4 +1,4 @@
-// RUN: %target-typecheck-verify-swift -enable-experimental-concurrency
+// RUN: %target-typecheck-verify-swift  -disable-availability-checking
 // REQUIRES: concurrency
 
 actor SomeActor { }
@@ -537,4 +537,18 @@ func acceptAsyncSendableClosureInheriting<T>(@_inheritActorContext _: @Sendable 
   acceptAsyncSendableClosureInheriting {
     await onlyOnMainActor() // expected-warning{{no 'async' operations occur within 'await' expression}}
   }
+}
+
+
+// defer bodies inherit global actor-ness
+@MainActor
+var statefulThingy: Bool = false
+
+@MainActor
+func useFooInADefer() -> String {
+  defer {
+    statefulThingy = true
+  }
+
+  return "hello"
 }

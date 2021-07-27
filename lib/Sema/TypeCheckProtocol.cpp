@@ -357,7 +357,7 @@ matchWitnessDifferentiableAttr(DeclContext *dc, ValueDecl *req,
         auto reqDiffGenSig = reqDiffAttr->getDerivativeGenericSignature();
         auto conformanceGenSig = dc->getGenericSignatureOfContext();
         for (const auto &req :
-             witnessConfig.derivativeGenericSignature->getRequirements()) {
+             witnessConfig.derivativeGenericSignature.getRequirements()) {
           auto substReq = req.subst(result.WitnessSubstitutions);
           bool reqDiffGenSigSatisfies =
               reqDiffGenSig && substReq &&
@@ -1993,7 +1993,7 @@ checkIndividualConformance(NormalProtocolConformance *conformance,
     if (auto ext = dyn_cast<ExtensionDecl>(DC)) {
       if (auto classDecl = ext->getSelfClassDecl()) {
         if (classDecl->isGenericContext()) {
-          if (!classDecl->usesObjCGenericsModel()) {
+          if (!classDecl->isTypeErasedGenericClass()) {
             C.Diags.diagnose(ComplainLoc,
                              diag::objc_protocol_in_generic_extension,
                              classDecl->isGeneric(), T, ProtoType);
@@ -2014,7 +2014,7 @@ checkIndividualConformance(NormalProtocolConformance *conformance,
     // types for any obj-c ones.
     while (nestedType) {
       if (auto clas = nestedType->getClassOrBoundGenericClass()) {
-        if (clas->usesObjCGenericsModel()) {
+        if (clas->isTypeErasedGenericClass()) {
           C.Diags.diagnose(ComplainLoc,
                            diag::objc_generics_cannot_conditionally_conform, T,
                            ProtoType);
@@ -2245,10 +2245,10 @@ static Type getRequirementTypeForDisplay(ModuleDecl *module,
 
     auto genericSig = fnTy->getOptGenericSignature();
     if (genericSig) {
-      if (genericSig->getGenericParams().size() > 1) {
+      if (genericSig.getGenericParams().size() > 1) {
         genericSig = GenericSignature::get(
-          genericSig->getGenericParams().slice(1),
-          genericSig->getRequirements());
+          genericSig.getGenericParams().slice(1),
+          genericSig.getRequirements());
       } else {
         genericSig = nullptr;
       }
@@ -3014,7 +3014,7 @@ bool ConformanceChecker::checkObjCTypeErasedGenerics(
   auto classDecl = Adoptee->getClassOrBoundGenericClass();
   if (!classDecl) return false;
 
-  if (!classDecl->usesObjCGenericsModel()) return false;
+  if (!classDecl->isTypeErasedGenericClass()) return false;
 
   // Concrete types are okay.
   if (!type->getCanonicalType()->hasTypeParameter()) return false;
@@ -3703,11 +3703,8 @@ static bool hasSelfSameTypeConstraint(const ValueDecl *req) {
     return false;
 
   const auto genericSig = genCtx->getGenericSignature();
-  if (!genericSig)
-    return false;
-
   const auto selfTy = proto->getSelfInterfaceType();
-  for (const auto &constr : genericSig->getRequirements()) {
+  for (const auto &constr : genericSig.getRequirements()) {
     if (constr.getKind() != RequirementKind::SameType)
       continue;
 
@@ -3728,10 +3725,9 @@ static Optional<std::pair<RequirementRepr *, Requirement>>
 getAdopteeSelfSameTypeConstraint(ClassDecl *selfClass, ValueDecl *witness) {
   auto genericSig =
     witness->getInnermostDeclContext()->getGenericSignatureOfContext();
-  if (!genericSig) return None;
 
   // First, search for any bogus requirements.
-  auto it = llvm::find_if(genericSig->getRequirements(),
+  auto it = llvm::find_if(genericSig.getRequirements(),
                           [&selfClass](const auto &req) {
     if (req.getKind() != RequirementKind::SameType)
       return false;
@@ -3739,7 +3735,7 @@ getAdopteeSelfSameTypeConstraint(ClassDecl *selfClass, ValueDecl *witness) {
     return req.getFirstType()->getAnyNominal() == selfClass
         || req.getSecondType()->getAnyNominal() == selfClass;
   });
-  if (it == genericSig->getRequirements().end()) {
+  if (it == genericSig.getRequirements().end()) {
     return None;
   }
 
@@ -5935,6 +5931,13 @@ void TypeChecker::checkConformancesInContext(IterableDeclContext *idc) {
 
   // Check all conformances.
   groupChecker.checkAllConformances();
+
+  // Check actor isolation.
+  for (auto *member : idc->getMembers()) {
+    if (auto *valueDecl = dyn_cast<ValueDecl>(member)) {
+      (void)getActorIsolation(valueDecl);
+    }
+  }
 
   if (Context.TypeCheckerOpts.DebugGenericSignatures &&
       !conformances.empty()) {

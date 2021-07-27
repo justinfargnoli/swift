@@ -3,8 +3,8 @@ CHANGELOG
 
 _**Note:** This is in reverse chronological order, so newer entries are added to the top._
 
-Swift Next
-----------
+Swift 5.6
+---------
 * [SE-0290][]:
 
   It is now possible to write inverted availability conditions by using the new `#unavailable` keyword:
@@ -21,6 +21,31 @@ Swift Next
 
 Swift 5.5
 ---------
+
+* [SE-0313][]:
+
+  Parameters of actor type can be declared as `isolated`, which means that they
+  represent the actor on which that code will be executed. `isolated` parameters
+  extend the actor-isolated semantics of the `self` parameter of actor methods
+  to arbitrary parameters. For example:
+
+  ```swift
+  actor MyActor {
+    func f() { }
+  }
+
+  func g(actor: isolated MyActor) {
+    actor.f()   // okay, this code is always executing on "actor"
+  }
+
+  func h(actor: MyActor) async {
+    g(actor: actor)        // error, call must be asynchronous
+    await g(actor: actor)  // okay, hops to "actor" before calling g
+  }
+  ```
+
+  The `self` parameter of actor methods are implicitly `isolated`. The
+  `nonisolated` keyword makes the `self` parameter no longer `isolated`.
 
 * [SR-14731][]:
 

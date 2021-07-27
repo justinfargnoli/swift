@@ -85,7 +85,7 @@ llvm::cl::opt<bool> UseBasicDynamicReplacement(
     llvm::cl::desc("Basic implementation of dynamic replacement"));
 
 namespace {
-  
+
 /// Add methods, properties, and protocol conformances from a JITed extension
 /// to an ObjC class using the ObjC runtime.
 ///
@@ -119,8 +119,8 @@ public:
                                              /*allow uninitialized*/ false);
     classMetadata = Builder.CreateBitCast(classMetadata, IGM.ObjCClassPtrTy);
     metaclassMetadata = IGM.getAddrOfMetaclassObject(
-                                       origTy.getClassOrBoundGenericClass(),
-                                                         NotForDefinition);
+                          dyn_cast_or_null<ClassDecl>(origTy->getAnyNominal()),
+                          NotForDefinition);
     metaclassMetadata = llvm::ConstantExpr::getBitCast(metaclassMetadata,
                                                    IGM.ObjCClassPtrTy);
 
@@ -485,6 +485,9 @@ void IRGenModule::emitSourceFile(SourceFile &SF) {
       if (libraryName == "swiftCompatibilityDynamicReplacements") {
         compatibilityVersion = IRGen.Opts.
             AutolinkRuntimeCompatibilityDynamicReplacementLibraryVersion;
+      } else if (libraryName == "swiftCompatibilityConcurrency") {
+        compatibilityVersion =
+            IRGen.Opts.AutolinkRuntimeCompatibilityConcurrencyLibraryVersion;
       } else {
         compatibilityVersion = IRGen.Opts.
             AutolinkRuntimeCompatibilityLibraryVersion;

@@ -1299,7 +1299,7 @@ public:
     
     // Extract structural substitutions.
     if (origContextType->hasTypeParameter()) {
-      origContextType = origSig->getGenericEnvironment()
+      origContextType = origSig.getGenericEnvironment()
         ->mapTypeIntoContext(origContextType)
         ->getCanonicalType();
     }
@@ -1674,25 +1674,9 @@ private:
         || NextOrigParamIndex != Foreign.Async->completionHandlerParamIndex())
       return false;
     
-    auto nativeCHTy = Foreign.Async->completionHandlerType();
-
-    // Use the abstraction pattern we're lowering against in order to lower
-    // the completion handler type, so we can preserve C/ObjC distinctions that
-    // normally get abstracted away by the importer.
-    auto completionHandlerNativeOrigTy = TopLevelOrigType
-      .getObjCMethodAsyncCompletionHandlerType(nativeCHTy);
-    
-    // Bridge the Swift completion handler type back to its
-    // foreign representation.
-    auto foreignCHTy = TC.getLoweredBridgedType(completionHandlerNativeOrigTy,
-                                      nativeCHTy,
-                                      Bridgeability::Full,
-                                      SILFunctionTypeRepresentation::ObjCMethod,
-                                      TypeConverter::ForArgument)
-      ->getCanonicalType();
-    
-    auto completionHandlerOrigTy = TopLevelOrigType
-      .getObjCMethodAsyncCompletionHandlerType(foreignCHTy);
+    CanType foreignCHTy = TopLevelOrigType
+      .getObjCMethodAsyncCompletionHandlerForeignType(Foreign.Async.getValue(), TC);
+    auto completionHandlerOrigTy = TopLevelOrigType.getObjCMethodAsyncCompletionHandlerType(foreignCHTy);
     auto completionHandlerTy = TC.getLoweredType(completionHandlerOrigTy,
                                                  foreignCHTy, expansion)
       .getASTType();
@@ -1766,7 +1750,7 @@ static bool isPseudogeneric(SILDeclRef c) {
   if (!dc) return false;
 
   auto classDecl = dc->getSelfClassDecl();
-  return (classDecl && classDecl->usesObjCGenericsModel());
+  return (classDecl && classDecl->isTypeErasedGenericClass());
 }
 
 /// Update the result type given the foreign error convention that we will be
