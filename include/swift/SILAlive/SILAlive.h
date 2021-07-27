@@ -18,7 +18,7 @@
 
 namespace swift {
 
-std::unique_ptr<AliveModule> aliveIRGen(SILModule *SILMod);
+bool translationValidationOptimizationPass(SILModule *SILMod);
 
 } 
 

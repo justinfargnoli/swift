@@ -19,23 +19,8 @@ namespace {
 
 class TranslationValidation : public SILModuleTransform {
   void run() override { 
-    auto aliveModule = aliveIRGen(getModule());
-    assert(aliveModule && "Cannot use `nullptr` `aliveModule`");
-
-    auto &contextAliveModule = getModule()->getASTContext().getSILAliveContext()
-        .aliveModule();
-    if (contextAliveModule.hasValue()) {
-      // With the source `contextAliveModule.getValue()` and target `aliveModule`
-      // run translation validation
-      // TODO: ^
-    } 
-
-    // Put \p aliveModule into \c AliveModule put to either
-    // - replace `None` with an \c AliveModule 
-    // - replace the existing \c AliveModule
-    // so that the next time this function is invoked it can be used as the source
-    // of translation validation. 
-    contextAliveModule = std::move(aliveModule);
+    bool result = translationValidationOptimizationPass(getModule());
+    assert(result && "Translation validation optimization pass failed.");
   }
 };
 
