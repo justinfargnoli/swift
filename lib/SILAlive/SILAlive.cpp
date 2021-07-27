@@ -101,8 +101,6 @@ std::unique_ptr<AliveModule> aliveIRGen(GeneratedModule generatedModule) {
 
 std::unique_ptr<AliveModule> aliveIRGen(SILModule *SILMod) {
   // Clone the SIL Module
-  assert(SILMod->getStage() != SILStage::Lowered &&
-         "SILAliveLLVM doesn't support SILStage::Lowered.");
   auto SILModClone = cloneModule(SILMod);
 
   // Generate LLVM IR for the SILModule
@@ -110,27 +108,6 @@ std::unique_ptr<AliveModule> aliveIRGen(SILModule *SILMod) {
   assert(generatedModule.getModule() && "IR module generation failed.");
 
   return aliveIRGen(std::move(generatedModule));
-}
-
-bool SILAliveLLVM(SILModule *SILMod) {
-  auto aliveModule = aliveIRGen(SILMod);
-
-  auto &contextAliveModule = SILMod->getASTContext().getSILAliveContext()
-      .aliveModule();
-  if (contextAliveModule.hasValue()) {
-    // With the source `contextAliveModule.getValue()` and target `aliveModule`
-    // run translation validation
-    // TODO: ^
-  } 
-
-  // Put \p aliveModule into \c AliveModule put to either
-  // - replace `None` with an \c AliveModule 
-  // - replace the existing \c AliveModule
-  // so that the next time this function is invoked it can be used as the source
-  // of translation validation. 
-  contextAliveModule = std::move(aliveModule);
-
-  return true; 
 }
 
 } 

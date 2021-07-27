@@ -124,8 +124,8 @@ PASS(AccessMarkerElimination, "access-marker-elim",
      "Access Marker Elimination.")
 PASS(AddressLowering, "address-lowering",
      "SIL Address Lowering")
-PASS(AliveIRGen, "alive-ir-gen", 
-     "Lower SIL to Alive IR")
+PASS(TranslationValidation, "translation-validation", 
+     "Translation Validation with SILAlive infastructure")
 PASS(AllocBoxToStack, "allocbox-to-stack",
      "Stack Promotion of Box Objects")
 IRGEN_PASS(AllocStackHoisting, "alloc-stack-hoisting",

@@ -18,7 +18,7 @@
 
 namespace swift {
 
-bool SILAliveLLVM(SILModule *M);
+std::unique_ptr<AliveModule> aliveIRGen(SILModule *SILMod);
 
 } 
 

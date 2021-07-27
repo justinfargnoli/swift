@@ -4,7 +4,7 @@ target_sources(swiftSILOptimizer PRIVATE
   AccessPathVerification.cpp
   AccessedStorageAnalysisDumper.cpp
   AccessedStorageDumper.cpp
-  AliveIRGen.cpp
+  TranslationValidation.cpp
   BasicCalleePrinter.cpp
   BasicInstructionPropertyDumper.cpp
   BugReducerTester.cpp
