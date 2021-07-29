@@ -34,7 +34,7 @@ std::unique_ptr<SILModule> cloneModule(SILModule &originalModule) {
       originalModule.getOptions());
 
   // initialize the new \c SILGlobalVariable s
-  for (auto &originalGlobalVar : originalModule.getSILGlobals()) {
+  for (const auto &originalGlobalVar : originalModule.getSILGlobals()) {
     SILGlobalVariable::create(
         *newModule, originalGlobalVar.getLinkage(),
         originalGlobalVar.isSerialized(), originalGlobalVar.getName(),
@@ -45,7 +45,7 @@ std::unique_ptr<SILModule> cloneModule(SILModule &originalModule) {
   {
     // initialize the new \c SILFunction s
     SILFunctionBuilder functionBuilder{*newModule};
-    for (SILFunction &originalFunction : originalModule) {
+    for (const auto &originalFunction : originalModule) {
       // copy \p originalFunction into \p newModule
       functionBuilder.createFunction(
         originalFunction.getLinkage(), originalFunction.getName(),
