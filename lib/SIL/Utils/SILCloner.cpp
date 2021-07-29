@@ -19,22 +19,22 @@
 
 namespace swift {
 
-std::unique_ptr<SILModule> cloneModule(SILModule *originalModule) {
+std::unique_ptr<SILModule> cloneModule(SILModule &originalModule) {
   // This implementation is based on llvm::CloneModule which can be found here:
   // https://llvm.org/doxygen/namespacellvm.html#ab371d6b308eb9772bdec63cf7a041407
 
-  assert(originalModule->getStage() != SILStage::Lowered &&
+  assert(originalModule.getStage() != SILStage::Lowered &&
          "cloneModule doesn't support SILStage::Lowered.");
 
   // Create a new module to copy the contents of \p originalModule into. 
   llvm::PointerUnion<FileUnit *, ModuleDecl *> context{};
-  context = (ModuleDecl *)originalModule->getSwiftModule();
+  context = (ModuleDecl *)originalModule.getSwiftModule();
   auto newModule = SILModule::createEmptyModule(
-      context, originalModule->Types,
-      originalModule->getOptions());
+      context, originalModule.Types,
+      originalModule.getOptions());
 
   // initialize the new \c SILGlobalVariable s
-  for (auto &originalGlobalVar : originalModule->getSILGlobals()) {
+  for (auto &originalGlobalVar : originalModule.getSILGlobals()) {
     SILGlobalVariable::create(
         *newModule, originalGlobalVar.getLinkage(),
         originalGlobalVar.isSerialized(), originalGlobalVar.getName(),
@@ -45,7 +45,7 @@ std::unique_ptr<SILModule> cloneModule(SILModule *originalModule) {
   {
     // initialize the new \c SILFunction s
     SILFunctionBuilder functionBuilder{*newModule};
-    for (SILFunction &originalFunction : *originalModule) {
+    for (SILFunction &originalFunction : originalModule) {
       // copy \p originalFunction into \p newModule
       functionBuilder.createFunction(
         originalFunction.getLinkage(), originalFunction.getName(),
@@ -68,30 +68,30 @@ std::unique_ptr<SILModule> cloneModule(SILModule *originalModule) {
   // https://github.com/apple/swift/blob/main/docs/OwnershipManifesto.md#non-copyable-types
   // https://forums.swift.org/t/initializers-of-global-variables/34637
   {
-    auto originalGlobal = originalModule->sil_global_begin();
+    auto originalGlobal = originalModule.sil_global_begin();
     auto newGlobal = newModule->sil_global_begin();
-    for (; originalGlobal != originalModule->sil_global_end() &&
+    for (; originalGlobal != originalModule.sil_global_end() &&
           newGlobal != newModule->sil_global_end(); ++originalGlobal, ++newGlobal) {
       assert(originalGlobal->begin() == originalGlobal->end() && 
           "Global static initalizer lists are not supported.");
     }
-    assert(originalGlobal == originalModule->sil_global_end() && 
+    assert(originalGlobal == originalModule.sil_global_end() && 
           newGlobal == newModule->sil_global_end() && 
           "`originalModule` and `newModule` sil global iterators are not of the same legnth.");
   }
 
   // copy the bodies of the \c SILFunction s 
   {
-    auto originalFunction = originalModule->begin();
+    auto originalFunction = originalModule.begin();
     auto newFunction = newModule->begin();
-    for (; originalFunction != originalModule->end() &&
+    for (; originalFunction != originalModule.end() &&
           newFunction != newModule->end(); ++originalFunction, ++newFunction) {
       if (originalFunction->begin() != originalFunction->end()) {
         SILFunctionCloner funcCloner(&*newFunction);
         funcCloner.cloneFunction(&*originalFunction);
       }
     }
-    assert(originalFunction == originalModule->end() && 
+    assert(originalFunction == originalModule.end() && 
           newFunction == newModule->end() && 
           "`originalModule` and `newModule` function iterators are not of the same legnth.");
   }

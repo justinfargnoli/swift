@@ -18,7 +18,7 @@
 
 namespace swift {
 
-bool translationValidationOptimizationPass(SILModule *SILMod);
+bool translationValidationOptimizationPass(SILModule &SILMod);
 
 } 
 

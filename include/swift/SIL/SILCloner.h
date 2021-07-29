@@ -479,7 +479,7 @@ public:
   }
 };
 
-std::unique_ptr<SILModule> cloneModule(SILModule *originalModule);
+std::unique_ptr<SILModule> cloneModule(SILModule &originalModule);
 
 template<typename ImplClass>
 SILValue

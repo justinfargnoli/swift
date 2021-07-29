@@ -22,6 +22,9 @@ class AliveModule {
 
 public:
   void pushFunction(std::unique_ptr<IR::Function> function);
+
+  std::vector<std::unique_ptr<IR::Function>>::iterator begin();
+  std::vector<std::unique_ptr<IR::Function>>::iterator end();
 };
 
 class SILAliveContext {
@@ -31,6 +34,6 @@ public:
   llvm::Optional<std::unique_ptr<AliveModule>> &aliveModule();
 };
 
-} 
+}
 
 #endif // SWIFT_SILALIVE_SILALIVEASTCONTEXT_H

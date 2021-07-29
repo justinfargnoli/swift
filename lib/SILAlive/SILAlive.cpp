@@ -21,6 +21,7 @@
 #include "swift/TBDGen/TBDGen.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm_util/llvm2alive.h"
+#include "tools/transform.h"
 #include <iostream>
 
 namespace swift {
@@ -28,6 +29,14 @@ namespace swift {
 void AliveModule::pushFunction(std::unique_ptr<IR::Function> function) {
   assert(function && "Cannot add a `nullptr` `IR::Function`");
   functions.push_back(std::move(function));
+}
+
+std::vector<std::unique_ptr<IR::Function>>::iterator AliveModule::begin() { 
+  return functions.begin(); 
+}
+  
+std::vector<std::unique_ptr<IR::Function>>::iterator AliveModule::end() { 
+  return functions.end(); 
 }
 
 llvm::Optional<std::unique_ptr<AliveModule>> &SILAliveContext::aliveModule() {
@@ -54,7 +63,7 @@ GeneratedModule genLLVMIR(std::unique_ptr<SILModule> SILMod) {
   // Lower \p SILMod to SILStage::Lowered
   assert(SILMod && "Cannot generate LLVM IR from a nullptr.");
   lowerSIL(*SILMod);
-
+  
   // Generate LLVM IR for the \p SILMod
   llvm::GlobalVariable *HashGlobal;
   return performIRGeneration(
@@ -70,13 +79,12 @@ std::unique_ptr<IR::Function> aliveIRFunctionGen(llvm::Function &F,
   // than once during program execution
   //
   // Initialize llvm_util
-  llvm_util::initializer llvm_util_init(std::cerr, dataLayout);
+  llvm_util::initializer llvm_util_init{std::cerr, dataLayout};
 
-  auto functionAlivePtr = llvm_util::llvm2alive(F, 
-      llvm::TargetLibraryInfo{llvm::TargetLibraryInfoImpl{triple}}, 
-      std::vector<std::string_view>()).getPointer();
+  auto functionAlive = llvm_util::llvm2alive(F, 
+      llvm::TargetLibraryInfo{llvm::TargetLibraryInfoImpl{triple}});
 
-  return std::unique_ptr<IR::Function>(functionAlivePtr);
+  return std::unique_ptr<IR::Function>{functionAlive.getPointer()};
 }
 
 std::unique_ptr<AliveModule> aliveIRGen(GeneratedModule generatedModule) {
@@ -91,7 +99,7 @@ std::unique_ptr<AliveModule> aliveIRGen(GeneratedModule generatedModule) {
         LLVMIRMod->getDataLayout(),
         generatedModule.getTargetMachine()->getTargetTriple());
     assert(functionAlive && "aliveIRFunctionGen failed.");
-    
+
     // Add `functionAlive` to the `aliveModule`
     aliveModule->pushFunction(std::move(functionAlive));
   }
@@ -99,7 +107,7 @@ std::unique_ptr<AliveModule> aliveIRGen(GeneratedModule generatedModule) {
   return aliveModule;
 }
 
-std::unique_ptr<AliveModule> aliveIRGen(SILModule *SILMod) {
+std::unique_ptr<AliveModule> aliveIRGen(SILModule &SILMod) {
   // Clone the SIL Module
   auto SILModClone = cloneModule(SILMod);
 
@@ -110,18 +118,49 @@ std::unique_ptr<AliveModule> aliveIRGen(SILModule *SILMod) {
   return aliveIRGen(std::move(generatedModule));
 }
 
-bool translationValidationOptimizationPass(SILModule *SILMod) {
+void translationValidationFunction(IR::Function &func1, IR::Function &func2) {
+  llvm::errs() << "\n --- 0 \n";
+  // func1.print(std::cerr);
+  // func2.print(std::cerr);
+  llvm::errs() << "\n --- 1 \n";
+  tools::Transform transform{"transform", std::move(func1), std::move(func2)};
+  llvm::errs() << "\n --- 2 \n";
+  tools::TransformVerify transformVerify{transform, false};
+  llvm::errs() << "\n --- 3 \n";
+  std::cerr << transformVerify.verify();
+}
+
+void translationValidation(AliveModule &mod1, AliveModule &mod2) {
+  // FIXME: This code iterates through the functions in each module and doesn't
+  // account for an optimization pass reorderd the functions. This may be a 
+  // source of false negatives.
+  auto func1 = mod1.begin();
+  auto func2 = mod2.begin();
+  for (; func1 != mod1.end() && func2 != mod2.end(); ++func1, ++func2) {
+    assert(*func1 && "`func1` doesn't exist!");
+    assert(*func2 && "`func2` doesn't exist!");
+    (*func1)->print(std::cerr);
+    translationValidationFunction(**func1, **func2);
+  }
+  assert(func1 == mod1.end() && func2 == mod2.end() && 
+        "`func1` and `func2` Alive function iterators are not of the same legnth.");
+}
+
+bool translationValidationOptimizationPass(SILModule &SILMod) {
   auto aliveModule = aliveIRGen(SILMod);
   assert(aliveModule && "Cannot use `nullptr` `aliveModule`");
 
-  auto &contextAliveModule = SILMod->getASTContext().getSILAliveContext()
-      .aliveModule();
+  (*aliveModule->begin())->print(std::cerr);
+
+  auto &contextAliveModule =
+      SILMod.getASTContext().getSILAliveContext().aliveModule();
   if (contextAliveModule.hasValue()) {
     // With the source `contextAliveModule.getValue()` and target `aliveModule`
     // run translation validation
-    // TODO: ^
-  } 
-
+    assert(contextAliveModule.getValue() && "Cannot use `nullptr` `contextAliveModule`");
+    translationValidation(*contextAliveModule.getValue(), *aliveModule);
+  }
+  
   // Put \p aliveModule into \c AliveModule put to either
   // - replace `None` with an \c AliveModule 
   // - replace the existing \c AliveModule
@@ -131,4 +170,5 @@ bool translationValidationOptimizationPass(SILModule *SILMod) {
 
   return true;
 }
+
 } 
