@@ -95,8 +95,9 @@ std::unique_ptr<AliveModule> aliveIRGen(GeneratedModule generatedModule) {
   
   for (auto &functionLLVM : *LLVMIRMod) {
     // Lower LLVM function IR to Alive function IR
-    auto functionAlive = aliveIRFunctionGen(functionLLVM, 
-        LLVMIRMod->getDataLayout(),
+    auto functionAlive = std::make_unique<IR::Function>();
+    functionAlive = aliveIRFunctionGen(functionLLVM, 
+        LLVMIRMod->getDataLayout(), 
         generatedModule.getTargetMachine()->getTargetTriple());
     assert(functionAlive && "aliveIRFunctionGen failed.");
 
@@ -118,16 +119,14 @@ std::unique_ptr<AliveModule> aliveIRGen(SILModule &SILMod) {
   return aliveIRGen(std::move(generatedModule));
 }
 
-void translationValidationFunction(IR::Function &func1, IR::Function &func2) {
-  llvm::errs() << "\n --- 0 \n";
-  // func1.print(std::cerr);
-  // func2.print(std::cerr);
-  llvm::errs() << "\n --- 1 \n";
-  tools::Transform transform{"transform", std::move(func1), std::move(func2)};
-  llvm::errs() << "\n --- 2 \n";
-  tools::TransformVerify transformVerify{transform, false};
+void translationValidationFunction(IR::Function func1, IR::Function func2) {
   llvm::errs() << "\n --- 3 \n";
+  tools::Transform transform{"transform", std::move(func1), std::move(func2)};
+  llvm::errs() << "\n --- 4 \n";
+  tools::TransformVerify transformVerify{transform, false};
+  llvm::errs() << "\n --- 5 \n";
   std::cerr << transformVerify.verify();
+  llvm::errs() << "\n --- 6 \n";
 }
 
 void translationValidation(AliveModule &mod1, AliveModule &mod2) {
@@ -140,7 +139,10 @@ void translationValidation(AliveModule &mod1, AliveModule &mod2) {
     assert(*func1 && "`func1` doesn't exist!");
     assert(*func2 && "`func2` doesn't exist!");
     (*func1)->print(std::cerr);
-    translationValidationFunction(**func1, **func2);
+    (*func2)->print(std::cerr);
+    llvm::errs() << "\n --- 2 \n";
+    translationValidationFunction(std::move(**func1), std::move(**func2));
+    llvm::errs() << "\n --- 7 \n";
   }
   assert(func1 == mod1.end() && func2 == mod2.end() && 
         "`func1` and `func2` Alive function iterators are not of the same legnth.");
@@ -150,15 +152,15 @@ bool translationValidationOptimizationPass(SILModule &SILMod) {
   auto aliveModule = aliveIRGen(SILMod);
   assert(aliveModule && "Cannot use `nullptr` `aliveModule`");
 
-  (*aliveModule->begin())->print(std::cerr);
-
   auto &contextAliveModule =
       SILMod.getASTContext().getSILAliveContext().aliveModule();
   if (contextAliveModule.hasValue()) {
     // With the source `contextAliveModule.getValue()` and target `aliveModule`
     // run translation validation
     assert(contextAliveModule.getValue() && "Cannot use `nullptr` `contextAliveModule`");
+    llvm::errs() << "\n --- 1 \n";
     translationValidation(*contextAliveModule.getValue(), *aliveModule);
+    llvm::errs() << "\n --- 8 \n";
   }
   
   // Put \p aliveModule into \c AliveModule put to either
