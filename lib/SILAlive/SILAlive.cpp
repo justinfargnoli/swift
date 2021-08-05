@@ -134,8 +134,9 @@ std::unique_ptr<IR::Function> aliveIRFunctionGen(llvm::Function &F,
   auto functionAlive = llvm_util::llvm2alive(F, 
       llvm::TargetLibraryInfo{llvm::TargetLibraryInfoImpl{triple}}/*, 
       globalVarNamesView*/);
+  assert(functionAlive.hasValue() && "`functionAlive` is empty");
 
-  return std::unique_ptr<IR::Function>{functionAlive.getPointer()};
+  return std::make_unique<IR::Function>(std::move(*functionAlive));
 }
 
 std::unique_ptr<AliveModule> aliveIRGen(GeneratedModule generatedModule) {
@@ -146,8 +147,7 @@ std::unique_ptr<AliveModule> aliveIRGen(GeneratedModule generatedModule) {
 
   for (auto &functionLLVM : *LLVMIRMod) {
     // Lower LLVM function IR to Alive function IR
-    auto functionAlive = std::make_unique<IR::Function>();
-    functionAlive = aliveIRFunctionGen(functionLLVM, *LLVMIRMod, 
+    auto functionAlive = aliveIRFunctionGen(functionLLVM, *LLVMIRMod, 
         LLVMIRMod->getDataLayout(), 
         generatedModule.getTargetMachine()->getTargetTriple());
     assert(functionAlive && "aliveIRFunctionGen failed.");
