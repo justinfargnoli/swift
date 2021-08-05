@@ -72,17 +72,68 @@ GeneratedModule genLLVMIR(std::unique_ptr<SILModule> SILMod) {
       /*parallelOutputFilenames=*/ {}, &HashGlobal);
 }
 
+// void globalVariablesNamesUsed(std::vector<std::string> &globalVarNames, 
+//       llvm::Module &llvmMod, llvm::Function &func) {
+//   assert(globalVarNames.empty() && "`globalVarNames` has left over elements");
+
+//   // // Iterate through all global variables in this `llvm::Module`
+//   // for (const auto &globalVariable : llvmMod.globals()) {
+//   //   // Iterate through all of the uses of this `globalVariable `
+//   //   for (const auto *user : globalVariable.users()) {
+//   //     // If the `user` is an `llvm::Function`
+//   //     if (const auto *instruction = llvm::dyn_cast<llvm::Instruction>(user)) {
+//   //       // ... and if this function has the same name as `func`
+//   //       if (instruction->getFunction()->getName().equals(func.getName())) {
+//   //         // ... then add the name of `globalVariable` to `globalVarNames`
+//   //         globalVarNames.emplace_back(globalVariable.getName());
+//   //       }
+//   //     }
+//   //   }
+//   // }
+//   for (const auto &basicBlock : func) {
+//     for (const auto &instruction : basicBlock) {
+//       for (const llvm::Value *operand : instruction.operands()) {
+//         llvm::errs() << "\n --- 1 \n";
+//         llvm::errs() << "\n is a Value : " << llvm::isa<llvm::Value>(operand) << " \n";
+//         operand->dump();
+//         llvm::errs() << "\n is a Constant : "
+//                      << llvm::isa<llvm::Constant>(operand) << " \n";
+//         llvm::errs() << "\n is a GlobalValue : " << llvm::isa<llvm::GlobalValue>(operand) << " \n";
+//         if (const llvm::GlobalValue *globalVar =
+//                 llvm::dyn_cast<llvm::GlobalValue>(operand)) {
+//           llvm::errs() << "\n --- 2 \n";
+//           globalVarNames.emplace_back(globalVar->getName());
+//         }
+//       }
+//     }
+//   }
+// }
+
 std::unique_ptr<IR::Function> aliveIRFunctionGen(llvm::Function &F, 
+      llvm::Module &llvmMod,
       const llvm::DataLayout &dataLayout, 
       llvm::Triple triple) {
-  // NOTE: There may be a problem with calling `llvm_util::initializer` more 
-  // than once during program execution
-  //
   // Initialize llvm_util
   llvm_util::initializer llvm_util_init{std::cerr, dataLayout};
 
+  // Compute the names of the global variables used in `F`
+  // std::vector<std::string> globalVarNames{};
+  // globalVariablesNamesUsed(globalVarNames, llvmMod, F);
+  // {
+  //   std::cerr << "\n[ \n";
+  //   for (const auto &gv : globalVarNames) {
+  //     std::cerr << gv << ", \n";
+  //   }
+  //   std::cerr << "] \n";
+  // }
+  // std::vector<std::string_view> globalVarNamesView{};
+  // for (const auto &globalVarName : globalVarNames) {
+  //   globalVarNamesView.emplace_back(globalVarName);
+  // }
+
   auto functionAlive = llvm_util::llvm2alive(F, 
-      llvm::TargetLibraryInfo{llvm::TargetLibraryInfoImpl{triple}});
+      llvm::TargetLibraryInfo{llvm::TargetLibraryInfoImpl{triple}}/*, 
+      globalVarNamesView*/);
 
   return std::unique_ptr<IR::Function>{functionAlive.getPointer()};
 }
@@ -92,11 +143,11 @@ std::unique_ptr<AliveModule> aliveIRGen(GeneratedModule generatedModule) {
 
   auto LLVMIRMod = generatedModule.getModule();
   assert(LLVMIRMod && "No LLVM IR Module found.");
-  
+
   for (auto &functionLLVM : *LLVMIRMod) {
     // Lower LLVM function IR to Alive function IR
     auto functionAlive = std::make_unique<IR::Function>();
-    functionAlive = aliveIRFunctionGen(functionLLVM, 
+    functionAlive = aliveIRFunctionGen(functionLLVM, *LLVMIRMod, 
         LLVMIRMod->getDataLayout(), 
         generatedModule.getTargetMachine()->getTargetTriple());
     assert(functionAlive && "aliveIRFunctionGen failed.");
@@ -120,31 +171,23 @@ std::unique_ptr<AliveModule> aliveIRGen(SILModule &SILMod) {
 }
 
 void translationValidationFunction(IR::Function func1, IR::Function func2) {
-  llvm::errs() << "\n --- 3 \n";
   tools::Transform transform{"transform", std::move(func1), std::move(func2)};
-  llvm::errs() << "\n --- 4 \n";
   tools::TransformVerify transformVerify{transform, false};
-  llvm::errs() << "\n --- 5 \n";
   std::cerr << transformVerify.verify();
-  llvm::errs() << "\n --- 6 \n";
 }
 
-void translationValidation(AliveModule &mod1, AliveModule &mod2) {
+void translationValidation(std::unique_ptr<AliveModule> mod1, std::unique_ptr<AliveModule> mod2) {
   // FIXME: This code iterates through the functions in each module and doesn't
   // account for an optimization pass reorderd the functions. This may be a 
   // source of false negatives.
-  auto func1 = mod1.begin();
-  auto func2 = mod2.begin();
-  for (; func1 != mod1.end() && func2 != mod2.end(); ++func1, ++func2) {
+  auto func1 = mod1->begin();
+  auto func2 = mod2->begin();
+  for (; func1 != mod1->end() && func2 != mod2->end(); ++func1, ++func2) {
     assert(*func1 && "`func1` doesn't exist!");
     assert(*func2 && "`func2` doesn't exist!");
-    (*func1)->print(std::cerr);
-    (*func2)->print(std::cerr);
-    llvm::errs() << "\n --- 2 \n";
     translationValidationFunction(std::move(**func1), std::move(**func2));
-    llvm::errs() << "\n --- 7 \n";
   }
-  assert(func1 == mod1.end() && func2 == mod2.end() && 
+  assert(func1 == mod1->end() && func2 == mod2->end() && 
         "`func1` and `func2` Alive function iterators are not of the same legnth.");
 }
 
@@ -158,17 +201,16 @@ bool translationValidationOptimizationPass(SILModule &SILMod) {
     // With the source `contextAliveModule.getValue()` and target `aliveModule`
     // run translation validation
     assert(contextAliveModule.getValue() && "Cannot use `nullptr` `contextAliveModule`");
-    llvm::errs() << "\n --- 1 \n";
-    translationValidation(*contextAliveModule.getValue(), *aliveModule);
-    llvm::errs() << "\n --- 8 \n";
+    translationValidation(std::move(contextAliveModule.getValue()), 
+        std::move(aliveModule));
+  } else {
+    // Put \p aliveModule into \c AliveModule put to either
+    // - replace `None` with an \c AliveModule 
+    // - replace the existing \c AliveModule
+    // so that the next time this function is invoked it can be used as the source
+    // of translation validation. 
+    contextAliveModule = std::move(aliveModule);
   }
-  
-  // Put \p aliveModule into \c AliveModule put to either
-  // - replace `None` with an \c AliveModule 
-  // - replace the existing \c AliveModule
-  // so that the next time this function is invoked it can be used as the source
-  // of translation validation. 
-  contextAliveModule = std::move(aliveModule);
 
   return true;
 }

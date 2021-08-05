@@ -77,6 +77,8 @@ class Z3(cmake_product.CMakeProduct):
             self.cmake_options.define('CMAKE_OSX_ARCHITECTURES', arch)
 
         self.cmake_options.define('Z3_BUILD_LIBZ3_SHARED', 'OFF')
+        if self.args.enable_asan:
+            self.cmake_options.define('ASAN_BUILD', '1')
 
         self.cmake_options.define('CMAKE_INSTALL_PREFIX', self.build_dir)
         self.cmake_options.define('CMAKE_INSTALL_INCLUDEDIR', 'include')

@@ -88,7 +88,7 @@ class Alive(cmake_product.CMakeProduct):
                 os.path.join(os.path.dirname(self.build_dir), 'z3-macosx-x86_64', 'include'))
         # FIXME: Don't hardcode x86 here.
         self.cmake_options.define('Z3_LIBRARIES', '%s' %
-                os.path.join(os.path.dirname(self.build_dir), 'z3-macosx-x86_64', 'libz3.dylib')) 
+                os.path.join(os.path.dirname(self.build_dir), 'z3-macosx-x86_64', 'libz3.a')) 
         self.build_with_cmake(["all"], self.args.swift_build_variant, [])
 
         print('--- Copying Alive headers into a known location')
