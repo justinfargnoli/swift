@@ -171,8 +171,9 @@ std::unique_ptr<AliveModule> aliveIRGen(SILModule &SILMod) {
   return aliveIRGen(std::move(generatedModule));
 }
 
-void translationValidationFunction(IR::Function func1, IR::Function func2) {
-  smt::smt_initializer smt_init{};
+void translationValidationFunction(IR::Function func1, IR::Function func2, 
+      smt::smt_initializer smt_init) {
+  smt_init.reset();
   tools::Transform transform{"transform", std::move(func1), std::move(func2)};
   tools::TransformVerify transformVerify{transform, false};
   std::cout << transformVerify.verify();
@@ -196,27 +197,32 @@ void translationValidation(std::unique_ptr<AliveModule> mod1,
     assert(result.second && "Multiple functions in `mod2` have the same name!");
   }
 
-  // Iterate through the `IR::Function`s in mod1
-  for (auto func1 = mod1->begin(); func1 != mod1->end(); ++func1) {
-    assert(*func1 && "`func1` doesn't exist!");
+  {
+    smt::smt_initializer smt_init{};
 
-    // Find the matching `IR::Function` from `mod2`
-    // If a match isn't found default construct an `IR::Function`
-    auto &func2 = mod2Map[(*func1)->getName()];
+    // Iterate through the `IR::Function`s in mod1
+    for (auto func1 = mod1->begin(); func1 != mod1->end(); ++func1) {
+      assert(*func1 && "`func1` doesn't exist!");
 
-    // If func2 is a match and isn't the deafult constructed `IR::Function`
-    if (not func2->getName().empty()) {
-      // Run translation validation
-      translationValidationFunction(std::move(**func1), std::move(*func2));
-    } else {
-      // Otherwise tell the user that there wasn't a matching `IR::Function` for
-      // `func1`
-      reportUnmatchedFunction(**func1);
+      // Find the matching `IR::Function` from `mod2`
+      // If a match isn't found default construct an `IR::Function`
+      auto &func2 = mod2Map[(*func1)->getName()];
+
+      // If func2 is a match and isn't the deafult constructed `IR::Function`
+      if (not func2->getName().empty()) {
+        // Run translation validation
+        translationValidationFunction(std::move(**func1), std::move(*func2), 
+            smt_init);
+      } else {
+        // Otherwise tell the user that there wasn't a matching `IR::Function` for
+        // `func1`
+        reportUnmatchedFunction(**func1);
+      }
+
+      // Remove `func2` from the `mod2Map` 
+      auto result = mod2Map.erase(func2->getName());
+      assert(result && "Expected `func2` in `mod2Map`.");
     }
-
-    // Remove `func2` from the `mod2Map` 
-    auto result = mod2Map.erase(func2->getName());
-    assert(result && "Expected `func2` in `mod2Map`.");
   }
 
   // Report all of the `IR::Function`s in `mod2` which haven't been matched
