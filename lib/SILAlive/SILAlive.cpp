@@ -21,6 +21,7 @@
 #include "swift/TBDGen/TBDGen.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm_util/llvm2alive.h"
+#include "smt/smt.h"
 #include "tools/transform.h"
 #include <iostream>
 
@@ -171,6 +172,7 @@ std::unique_ptr<AliveModule> aliveIRGen(SILModule &SILMod) {
 }
 
 void translationValidationFunction(IR::Function func1, IR::Function func2) {
+  smt::smt_initializer smt_init{};
   tools::Transform transform{"transform", std::move(func1), std::move(func2)};
   tools::TransformVerify transformVerify{transform, false};
   std::cout << transformVerify.verify();
