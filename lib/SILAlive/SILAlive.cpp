@@ -114,17 +114,17 @@ std::unique_ptr<IR::Function> aliveIRFunctionGen(llvm::Function &F,
       const llvm::DataLayout &dataLayout, 
       llvm::Triple triple) {
   // Initialize llvm_util
-  llvm_util::initializer llvm_util_init{std::cerr, dataLayout};
+  llvm_util::initializer llvm_util_init{std::cout, dataLayout};
 
   // Compute the names of the global variables used in `F`
   // std::vector<std::string> globalVarNames{};
   // globalVariablesNamesUsed(globalVarNames, llvmMod, F);
   // {
-  //   std::cerr << "\n[ \n";
+  //   llvm::errs() << "\n[ \n";
   //   for (const auto &gv : globalVarNames) {
-  //     std::cerr << gv << ", \n";
+  //     llvm::errs() << gv << ", \n";
   //   }
-  //   std::cerr << "] \n";
+  //   llvm::errs() << "] \n";
   // }
   // std::vector<std::string_view> globalVarNamesView{};
   // for (const auto &globalVarName : globalVarNames) {
@@ -173,22 +173,54 @@ std::unique_ptr<AliveModule> aliveIRGen(SILModule &SILMod) {
 void translationValidationFunction(IR::Function func1, IR::Function func2) {
   tools::Transform transform{"transform", std::move(func1), std::move(func2)};
   tools::TransformVerify transformVerify{transform, false};
-  std::cerr << transformVerify.verify();
+  std::cout << transformVerify.verify();
 }
 
-void translationValidation(std::unique_ptr<AliveModule> mod1, std::unique_ptr<AliveModule> mod2) {
-  // FIXME: This code iterates through the functions in each module and doesn't
-  // account for an optimization pass reorderd the functions. This may be a 
-  // source of false negatives.
-  auto func1 = mod1->begin();
-  auto func2 = mod2->begin();
-  for (; func1 != mod1->end() && func2 != mod2->end(); ++func1, ++func2) {
-    assert(*func1 && "`func1` doesn't exist!");
-    assert(*func2 && "`func2` doesn't exist!");
-    translationValidationFunction(std::move(**func1), std::move(**func2));
+void reportUnmatchedFunction(IR::Function &func) {
+  // FIXME: Remove use of `std::cout`.
+  // The fundamental problem is figuring out how to print the `IR::Function`
+
+  std::cout << "\n--- (" << func.getName()
+      << ") : no matching function in target. \n";
+  std::cout << func << "\n";
+}
+
+void translationValidation(std::unique_ptr<AliveModule> mod1, 
+      std::unique_ptr<AliveModule> mod2) {
+  // Move all `IR::Function`s of `mod2` into `mod2Map`
+  llvm::StringMap<std::unique_ptr<IR::Function>> mod2Map{};
+  for (auto func = mod2->begin(); func != mod2->end(); ++func) {
+    auto result = mod2Map.try_emplace((*func)->getName(), std::move(*func));
+    assert(result.second && "Multiple functions in `mod2` have the same name!");
   }
-  assert(func1 == mod1->end() && func2 == mod2->end() && 
-        "`func1` and `func2` Alive function iterators are not of the same legnth.");
+
+  // Iterate through the `IR::Function`s in mod1
+  for (auto func1 = mod1->begin(); func1 != mod1->end(); ++func1) {
+    assert(*func1 && "`func1` doesn't exist!");
+
+    // Find the matching `IR::Function` from `mod2`
+    // If a match isn't found default construct an `IR::Function`
+    auto &func2 = mod2Map[(*func1)->getName()];
+
+    // If func2 is a match and isn't the deafult constructed `IR::Function`
+    if (not func2->getName().empty()) {
+      // Run translation validation
+      translationValidationFunction(std::move(**func1), std::move(*func2));
+    } else {
+      // Otherwise tell the user that there wasn't a matching `IR::Function` for
+      // `func1`
+      reportUnmatchedFunction(**func1);
+    }
+
+    // Remove `func2` from the `mod2Map` 
+    auto result = mod2Map.erase(func2->getName());
+    assert(result && "Expected `func2` in `mod2Map`.");
+  }
+
+  // Report all of the `IR::Function`s in `mod2` which haven't been matched
+  for (auto func = mod2Map.begin(); func != mod2Map.end(); ++func) {
+    reportUnmatchedFunction(*func->getValue());
+  }
 }
 
 bool translationValidationOptimizationPass(SILModule &SILMod) {
@@ -197,12 +229,16 @@ bool translationValidationOptimizationPass(SILModule &SILMod) {
 
   auto &contextAliveModule =
       SILMod.getASTContext().getSILAliveContext().aliveModule();
+      
   if (contextAliveModule.hasValue()) {
     // With the source `contextAliveModule.getValue()` and target `aliveModule`
     // run translation validation
-    assert(contextAliveModule.getValue() && "Cannot use `nullptr` `contextAliveModule`");
+    assert(contextAliveModule.getValue() && 
+        "Cannot use `nullptr` `contextAliveModule`");
     translationValidation(std::move(contextAliveModule.getValue()), 
         std::move(aliveModule));
+
+    contextAliveModule = None;
   } else {
     // Put \p aliveModule into \c AliveModule put to either
     // - replace `None` with an \c AliveModule 
