@@ -23,8 +23,13 @@ std::unique_ptr<SILModule> cloneModule(SILModule &originalModule) {
   // This implementation is based on llvm::CloneModule which can be found here:
   // https://llvm.org/doxygen/namespacellvm.html#ab371d6b308eb9772bdec63cf7a041407
 
-  assert(originalModule.getStage() != SILStage::Lowered &&
-         "cloneModule doesn't support SILStage::Lowered.");
+  if (originalModule.getStage() == SILStage::Canonical || 
+      originalModule.getStage() == SILStage::Lowered) {
+    exit(0);
+    // assert((originalModule.getStage() != SILStage::Canonical ||
+    //     originalModule.getStage() != SILStage::Lowered) &&
+    //     "cloneModule doesn't support SILStage::Lowered.");
+  }
 
   // Create a new module to copy the contents of \p originalModule into. 
   llvm::PointerUnion<FileUnit *, ModuleDecl *> context{};
