@@ -176,7 +176,7 @@ void translationValidationFunction(IR::Function func1, IR::Function func2,
   smt_init.reset();
   tools::Transform transform{"transform", std::move(func1), std::move(func2)};
   tools::TransformVerify transformVerify{transform, false};
-  std::cout << transformVerify.verify();
+  std::cout << transformVerify.verify() << std::endl;
 }
 
 void reportUnmatchedFunction(IR::Function &func) {
@@ -198,6 +198,7 @@ void translationValidation(std::unique_ptr<AliveModule> mod1,
   }
 
   {
+    // Initialize the SMT solver that Alive uses
     smt::smt_initializer smt_init{};
 
     // Iterate through the `IR::Function`s in mod1
@@ -210,12 +211,16 @@ void translationValidation(std::unique_ptr<AliveModule> mod1,
 
       // If func2 is a match and isn't the deafult constructed `IR::Function`
       if (not func2->getName().empty()) {
+        // FIXME: Does the following piece of code introduce UB since 
+        // std::vector will try to call the destructor on `func1` and `func2`
+        // when they have been moved out of the vector?
+        // 
         // Run translation validation
         translationValidationFunction(std::move(**func1), std::move(*func2), 
             smt_init);
       } else {
-        // Otherwise tell the user that there wasn't a matching `IR::Function` for
-        // `func1`
+        // Otherwise tell the user that there wasn't a matching `IR::Function` 
+        // for `func1`
         reportUnmatchedFunction(**func1);
       }
 
@@ -255,7 +260,7 @@ bool translationValidationOptimizationPass(SILModule &SILMod) {
     // of translation validation. 
     contextAliveModule = std::move(aliveModule);
   }
-
+  
   return true;
 }
 
