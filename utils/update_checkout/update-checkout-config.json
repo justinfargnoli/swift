@@ -99,7 +99,7 @@
                 "sourcekit-lsp": "main",
                 "swift-format": "main",
                 "z3": "4.8.10",
-                "alive": "main"
+                "alive": "back-to-tomorrow"
             }
         },
        "release/5.5": {
