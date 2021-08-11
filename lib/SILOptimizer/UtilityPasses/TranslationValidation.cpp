@@ -21,6 +21,7 @@ class TranslationValidation : public SILModuleTransform {
   void run() override {
     auto SILMod = getModule();
     assert(SILMod && "TranslationValidation cannot use `nullptr` SILModule.");
+    
     bool result = translationValidationOptimizationPass(*SILMod);
     assert(result && "Translation validation optimization pass failed.");
   }
