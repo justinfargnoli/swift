@@ -1,0 +1,692 @@
+sil_stage raw
+
+import Builtin
+import Swift
+import SwiftShims
+
+@_hasStorage @_hasInitialValue let operand1: Int { get }
+
+@_hasStorage @_hasInitialValue let operand2: Int { get }
+
+@_hasStorage @_hasInitialValue let op: String { get }
+
+// operand1
+sil_global hidden [let] @$s4calc8operand1Sivp : $Int
+
+// operand2
+sil_global hidden [let] @$s4calc8operand2Sivp : $Int
+
+// op
+sil_global hidden [let] @$s4calc2opSSvp : $String
+
+// main
+sil [ossa] @main : $@convention(c) (Int32, UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>) -> Int32 {
+bb0(%0 : $Int32, %1 : $UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>):
+  %2 = metatype $@thin Int.Type
+  %3 = metatype $@thick Int.Type                  // user: %21
+  %4 = metatype $@thin CommandLine.Type           // user: %6
+  // function_ref static CommandLine.arguments.getter
+  %5 = function_ref @$ss11CommandLineO9argumentsSaySSGvgZ : $@convention(method) (@thin CommandLine.Type) -> @owned Array<String> // user: %6
+  %6 = apply %5(%4) : $@convention(method) (@thin CommandLine.Type) -> @owned Array<String> // users: %11, %7
+  %7 = begin_borrow %6 : $Array<String>           // users: %10, %9
+  // function_ref Array.count.getter
+  %8 = function_ref @$sSa5countSivg : $@convention(method) <τ_0_0> (@guaranteed Array<τ_0_0>) -> Int // user: %9
+  %9 = apply %8<String>(%7) : $@convention(method) <τ_0_0> (@guaranteed Array<τ_0_0>) -> Int // user: %13
+  end_borrow %7 : $Array<String>                  // id: %10
+  destroy_value %6 : $Array<String>               // id: %11
+  %12 = alloc_stack $Int                          // users: %23, %21, %13
+  store %9 to [trivial] %12 : $*Int               // id: %13
+  %14 = integer_literal $Builtin.IntLiteral, 3    // user: %17
+  %15 = metatype $@thin Int.Type                  // user: %17
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %16 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %17
+  %17 = apply %16(%14, %15) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %19
+  %18 = alloc_stack $Int                          // users: %22, %21, %19
+  store %17 to [trivial] %18 : $*Int              // id: %19
+  // function_ref static BinaryInteger.!= infix(_:_:)
+  %20 = function_ref @$sSzsE2neoiySbx_xtFZ : $@convention(method) <τ_0_0 where τ_0_0 : BinaryInteger> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0, @thick τ_0_0.Type) -> Bool // user: %21
+  %21 = apply %20<Int>(%12, %18, %3) : $@convention(method) <τ_0_0 where τ_0_0 : BinaryInteger> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0, @thick τ_0_0.Type) -> Bool // user: %24
+  dealloc_stack %18 : $*Int                       // id: %22
+  dealloc_stack %12 : $*Int                       // id: %23
+  %24 = struct_extract %21 : $Bool, #Bool._value  // user: %25
+  cond_br %24, bb1, bb2                           // id: %25
+
+bb1:                                              // Preds: bb0
+  %26 = integer_literal $Builtin.Word, 1          // user: %28
+  // function_ref _allocateUninitializedArray<A>(_:)
+  %27 = function_ref @$ss27_allocateUninitializedArrayySayxG_BptBwlF : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %28
+  %28 = apply %27<Any>(%26) : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %29
+  (%29, %30) = destructure_tuple %28 : $(Array<Any>, Builtin.RawPointer) // users: %41, %31
+  %31 = pointer_to_address %30 : $Builtin.RawPointer to [strict] $*Any // user: %38
+  %32 = string_literal utf8 "Usage: $ main <int> <op> <int>" // user: %37
+  %33 = integer_literal $Builtin.Word, 30         // user: %37
+  %34 = integer_literal $Builtin.Int1, -1         // user: %37
+  %35 = metatype $@thin String.Type               // user: %37
+  // function_ref String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+  %36 = function_ref @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %37
+  %37 = apply %36(%32, %33, %34, %35) : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %39
+  %38 = init_existential_addr %31 : $*Any, $String // user: %39
+  store %37 to [init] %38 : $*String              // id: %39
+  // function_ref _finalizeUninitializedArray<A>(_:)
+  %40 = function_ref @$ss27_finalizeUninitializedArrayySayxGABnlF : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // user: %41
+  %41 = apply %40<Any>(%29) : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // users: %50, %47
+  // function_ref default argument 1 of print(_:separator:terminator:)
+  %42 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA0_ : $@convention(thin) () -> @owned String // user: %43
+  %43 = apply %42() : $@convention(thin) () -> @owned String // users: %49, %47
+  // function_ref default argument 2 of print(_:separator:terminator:)
+  %44 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA1_ : $@convention(thin) () -> @owned String // user: %45
+  %45 = apply %44() : $@convention(thin) () -> @owned String // users: %48, %47
+  // function_ref print(_:separator:terminator:)
+  %46 = function_ref @$ss5print_9separator10terminatoryypd_S2StF : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> () // user: %47
+  %47 = apply %46(%41, %43, %45) : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> ()
+  destroy_value %45 : $String                     // id: %48
+  destroy_value %43 : $String                     // id: %49
+  destroy_value %41 : $Array<Any>                 // id: %50
+  %51 = integer_literal $Builtin.Word, 1          // user: %53
+  // function_ref _allocateUninitializedArray<A>(_:)
+  %52 = function_ref @$ss27_allocateUninitializedArrayySayxG_BptBwlF : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %53
+  %53 = apply %52<Any>(%51) : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %54
+  (%54, %55) = destructure_tuple %53 : $(Array<Any>, Builtin.RawPointer) // users: %66, %56
+  %56 = pointer_to_address %55 : $Builtin.RawPointer to [strict] $*Any // user: %63
+  %57 = string_literal utf8 "Ignore all further results." // user: %62
+  %58 = integer_literal $Builtin.Word, 27         // user: %62
+  %59 = integer_literal $Builtin.Int1, -1         // user: %62
+  %60 = metatype $@thin String.Type               // user: %62
+  // function_ref String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+  %61 = function_ref @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %62
+  %62 = apply %61(%57, %58, %59, %60) : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %64
+  %63 = init_existential_addr %56 : $*Any, $String // user: %64
+  store %62 to [init] %63 : $*String              // id: %64
+  // function_ref _finalizeUninitializedArray<A>(_:)
+  %65 = function_ref @$ss27_finalizeUninitializedArrayySayxGABnlF : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // user: %66
+  %66 = apply %65<Any>(%54) : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // users: %75, %72
+  // function_ref default argument 1 of print(_:separator:terminator:)
+  %67 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA0_ : $@convention(thin) () -> @owned String // user: %68
+  %68 = apply %67() : $@convention(thin) () -> @owned String // users: %74, %72
+  // function_ref default argument 2 of print(_:separator:terminator:)
+  %69 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA1_ : $@convention(thin) () -> @owned String // user: %70
+  %70 = apply %69() : $@convention(thin) () -> @owned String // users: %73, %72
+  // function_ref print(_:separator:terminator:)
+  %71 = function_ref @$ss5print_9separator10terminatoryypd_S2StF : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> () // user: %72
+  %72 = apply %71(%66, %68, %70) : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> ()
+  destroy_value %70 : $String                     // id: %73
+  destroy_value %68 : $String                     // id: %74
+  destroy_value %66 : $Array<Any>                 // id: %75
+  br bb3                                          // id: %76
+
+bb2:                                              // Preds: bb0
+  br bb3                                          // id: %77
+
+bb3:                                              // Preds: bb1 bb2
+  alloc_global @$s4calc8operand1Sivp              // id: %78
+  %79 = global_addr @$s4calc8operand1Sivp : $*Int // users: %377, %291, %242, %193, %112
+  %80 = alloc_stack $Optional<Int>                // users: %113, %100, %97
+  %81 = metatype $@thin Int.Type
+  %82 = metatype $@thick Int.Type                 // user: %97
+  %83 = metatype $@thin CommandLine.Type          // user: %89
+  %84 = integer_literal $Builtin.IntLiteral, 0    // user: %87
+  %85 = metatype $@thin Int.Type                  // user: %87
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %86 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %87
+  %87 = apply %86(%84, %85) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %93
+  // function_ref static CommandLine.arguments.getter
+  %88 = function_ref @$ss11CommandLineO9argumentsSaySSGvgZ : $@convention(method) (@thin CommandLine.Type) -> @owned Array<String> // user: %89
+  %89 = apply %88(%83) : $@convention(method) (@thin CommandLine.Type) -> @owned Array<String> // users: %99, %90
+  %90 = begin_borrow %89 : $Array<String>         // users: %95, %93
+  %91 = alloc_stack $String                       // users: %98, %94, %93
+  // function_ref Array.subscript.getter
+  %92 = function_ref @$sSayxSicig : $@convention(method) <τ_0_0> (Int, @guaranteed Array<τ_0_0>) -> @out τ_0_0 // user: %93
+  %93 = apply %92<String>(%91, %87, %90) : $@convention(method) <τ_0_0> (Int, @guaranteed Array<τ_0_0>) -> @out τ_0_0
+  %94 = load [take] %91 : $*String                // user: %97
+  end_borrow %90 : $Array<String>                 // id: %95
+  // function_ref FixedWidthInteger.init(_:)
+  %96 = function_ref @$ss17FixedWidthIntegerPsEyxSgSScfC : $@convention(method) <τ_0_0 where τ_0_0 : FixedWidthInteger> (@owned String, @thick τ_0_0.Type) -> @out Optional<τ_0_0> // user: %97
+  %97 = apply %96<Int>(%80, %94, %82) : $@convention(method) <τ_0_0 where τ_0_0 : FixedWidthInteger> (@owned String, @thick τ_0_0.Type) -> @out Optional<τ_0_0>
+  dealloc_stack %91 : $*String                    // id: %98
+  destroy_value %89 : $Array<String>              // id: %99
+  %100 = load [trivial] %80 : $*Optional<Int>     // user: %101
+  switch_enum %100 : $Optional<Int>, case #Optional.some!enumelt: bb5, case #Optional.none!enumelt: bb4 // id: %101
+
+bb4:                                              // Preds: bb3
+  %102 = string_literal utf8 "calc/calc.swift"    // user: %109
+  %103 = integer_literal $Builtin.Word, 15        // user: %109
+  %104 = integer_literal $Builtin.Int1, -1        // user: %109
+  %105 = integer_literal $Builtin.Word, 6         // user: %109
+  %106 = integer_literal $Builtin.Word, 45
+  %107 = integer_literal $Builtin.Int1, 0         // user: %109
+  // function_ref _diagnoseUnexpectedNilOptional(_filenameStart:_filenameLength:_filenameIsASCII:_line:_isImplicitUnwrap:)
+  %108 = function_ref @$ss30_diagnoseUnexpectedNilOptional14_filenameStart01_E6Length01_E7IsASCII5_line17_isImplicitUnwrapyBp_BwBi1_BwBi1_tF : $@convention(thin) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, Builtin.Word, Builtin.Int1) -> () // user: %109
+  %109 = apply %108(%102, %103, %104, %105, %107) : $@convention(thin) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, Builtin.Word, Builtin.Int1) -> ()
+  unreachable                                     // id: %110
+
+// %111                                           // user: %112
+bb5(%111 : $Int):                                 // Preds: bb3
+  store %111 to [trivial] %79 : $*Int             // id: %112
+  dealloc_stack %80 : $*Optional<Int>             // id: %113
+  alloc_global @$s4calc8operand2Sivp              // id: %114
+  %115 = global_addr @$s4calc8operand2Sivp : $*Int // users: %378, %334, %292, %243, %194, %148
+  %116 = alloc_stack $Optional<Int>               // users: %149, %136, %133
+  %117 = metatype $@thin Int.Type
+  %118 = metatype $@thick Int.Type                // user: %133
+  %119 = metatype $@thin CommandLine.Type         // user: %125
+  %120 = integer_literal $Builtin.IntLiteral, 2   // user: %123
+  %121 = metatype $@thin Int.Type                 // user: %123
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %122 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %123
+  %123 = apply %122(%120, %121) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %129
+  // function_ref static CommandLine.arguments.getter
+  %124 = function_ref @$ss11CommandLineO9argumentsSaySSGvgZ : $@convention(method) (@thin CommandLine.Type) -> @owned Array<String> // user: %125
+  %125 = apply %124(%119) : $@convention(method) (@thin CommandLine.Type) -> @owned Array<String> // users: %135, %126
+  %126 = begin_borrow %125 : $Array<String>       // users: %131, %129
+  %127 = alloc_stack $String                      // users: %134, %130, %129
+  // function_ref Array.subscript.getter
+  %128 = function_ref @$sSayxSicig : $@convention(method) <τ_0_0> (Int, @guaranteed Array<τ_0_0>) -> @out τ_0_0 // user: %129
+  %129 = apply %128<String>(%127, %123, %126) : $@convention(method) <τ_0_0> (Int, @guaranteed Array<τ_0_0>) -> @out τ_0_0
+  %130 = load [take] %127 : $*String              // user: %133
+  end_borrow %126 : $Array<String>                // id: %131
+  // function_ref FixedWidthInteger.init(_:)
+  %132 = function_ref @$ss17FixedWidthIntegerPsEyxSgSScfC : $@convention(method) <τ_0_0 where τ_0_0 : FixedWidthInteger> (@owned String, @thick τ_0_0.Type) -> @out Optional<τ_0_0> // user: %133
+  %133 = apply %132<Int>(%116, %130, %118) : $@convention(method) <τ_0_0 where τ_0_0 : FixedWidthInteger> (@owned String, @thick τ_0_0.Type) -> @out Optional<τ_0_0>
+  dealloc_stack %127 : $*String                   // id: %134
+  destroy_value %125 : $Array<String>             // id: %135
+  %136 = load [trivial] %116 : $*Optional<Int>    // user: %137
+  switch_enum %136 : $Optional<Int>, case #Optional.some!enumelt: bb7, case #Optional.none!enumelt: bb6 // id: %137
+
+bb6:                                              // Preds: bb5
+  %138 = string_literal utf8 "calc/calc.swift"    // user: %145
+  %139 = integer_literal $Builtin.Word, 15        // user: %145
+  %140 = integer_literal $Builtin.Int1, -1        // user: %145
+  %141 = integer_literal $Builtin.Word, 7         // user: %145
+  %142 = integer_literal $Builtin.Word, 45
+  %143 = integer_literal $Builtin.Int1, 0         // user: %145
+  // function_ref _diagnoseUnexpectedNilOptional(_filenameStart:_filenameLength:_filenameIsASCII:_line:_isImplicitUnwrap:)
+  %144 = function_ref @$ss30_diagnoseUnexpectedNilOptional14_filenameStart01_E6Length01_E7IsASCII5_line17_isImplicitUnwrapyBp_BwBi1_BwBi1_tF : $@convention(thin) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, Builtin.Word, Builtin.Int1) -> () // user: %145
+  %145 = apply %144(%138, %139, %140, %141, %143) : $@convention(thin) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, Builtin.Word, Builtin.Int1) -> ()
+  unreachable                                     // id: %146
+
+// %147                                           // user: %148
+bb7(%147 : $Int):                                 // Preds: bb5
+  store %147 to [trivial] %115 : $*Int            // id: %148
+  dealloc_stack %116 : $*Optional<Int>            // id: %149
+  alloc_global @$s4calc2opSSvp                    // id: %150
+  %151 = global_addr @$s4calc2opSSvp : $*String   // users: %429, %164, %161
+  %152 = metatype $@thin CommandLine.Type         // user: %158
+  %153 = integer_literal $Builtin.IntLiteral, 1   // user: %156
+  %154 = metatype $@thin Int.Type                 // user: %156
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %155 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %156
+  %156 = apply %155(%153, %154) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %161
+  // function_ref static CommandLine.arguments.getter
+  %157 = function_ref @$ss11CommandLineO9argumentsSaySSGvgZ : $@convention(method) (@thin CommandLine.Type) -> @owned Array<String> // user: %158
+  %158 = apply %157(%152) : $@convention(method) (@thin CommandLine.Type) -> @owned Array<String> // users: %163, %159
+  %159 = begin_borrow %158 : $Array<String>       // users: %162, %161
+  // function_ref Array.subscript.getter
+  %160 = function_ref @$sSayxSicig : $@convention(method) <τ_0_0> (Int, @guaranteed Array<τ_0_0>) -> @out τ_0_0 // user: %161
+  %161 = apply %160<String>(%151, %156, %159) : $@convention(method) <τ_0_0> (Int, @guaranteed Array<τ_0_0>) -> @out τ_0_0
+  end_borrow %159 : $Array<String>                // id: %162
+  destroy_value %158 : $Array<String>             // id: %163
+  %164 = load_borrow %151 : $*String              // users: %467, %394, %312, %308, %263, %259, %214, %210, %165
+  %165 = copy_value %164 : $String                // users: %185, %212, %174
+  %166 = string_literal utf8 "+"                  // user: %171
+  %167 = integer_literal $Builtin.Word, 1         // user: %171
+  %168 = integer_literal $Builtin.Int1, -1        // user: %171
+  %169 = metatype $@thin String.Type              // user: %171
+  // function_ref String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+  %170 = function_ref @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %171
+  %171 = apply %170(%166, %167, %168, %169) : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %173
+  %172 = alloc_stack $String                      // users: %182, %181, %178, %173
+  store %171 to [init] %172 : $*String            // id: %173
+  %174 = begin_borrow %165 : $String              // users: %180, %176
+  %175 = alloc_stack $String                      // users: %179, %178, %176
+  %176 = store_borrow %174 to %175 : $*String
+  // function_ref ~= infix<A>(_:_:)
+  %177 = function_ref @$ss2teoiySbx_xtSQRzlF : $@convention(thin) <τ_0_0 where τ_0_0 : Equatable> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0) -> Bool // user: %178
+  %178 = apply %177<String>(%172, %175) : $@convention(thin) <τ_0_0 where τ_0_0 : Equatable> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0) -> Bool // user: %183
+  dealloc_stack %175 : $*String                   // id: %179
+  end_borrow %174 : $String                       // id: %180
+  destroy_addr %172 : $*String                    // id: %181
+  dealloc_stack %172 : $*String                   // id: %182
+  %183 = struct_extract %178 : $Bool, #Bool._value // user: %184
+  cond_br %183, bb8, bb9                          // id: %184
+
+bb8:                                              // Preds: bb7
+  destroy_value %165 : $String                    // id: %185
+  %186 = integer_literal $Builtin.Word, 1         // user: %188
+  // function_ref _allocateUninitializedArray<A>(_:)
+  %187 = function_ref @$ss27_allocateUninitializedArrayySayxG_BptBwlF : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %188
+  %188 = apply %187<Any>(%186) : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %189
+  (%189, %190) = destructure_tuple %188 : $(Array<Any>, Builtin.RawPointer) // users: %200, %191
+  %191 = pointer_to_address %190 : $Builtin.RawPointer to [strict] $*Any // user: %197
+  %192 = metatype $@thin Int.Type                 // user: %196
+  %193 = load [trivial] %79 : $*Int               // user: %196
+  %194 = load [trivial] %115 : $*Int              // user: %196
+  // function_ref static Int.+ infix(_:_:)
+  %195 = function_ref @$sSi1poiyS2i_SitFZ : $@convention(method) (Int, Int, @thin Int.Type) -> Int // user: %196
+  %196 = apply %195(%193, %194, %192) : $@convention(method) (Int, Int, @thin Int.Type) -> Int // user: %198
+  %197 = init_existential_addr %191 : $*Any, $Int // user: %198
+  store %196 to [trivial] %197 : $*Int            // id: %198
+  // function_ref _finalizeUninitializedArray<A>(_:)
+  %199 = function_ref @$ss27_finalizeUninitializedArrayySayxGABnlF : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // user: %200
+  %200 = apply %199<Any>(%189) : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // users: %209, %206
+  // function_ref default argument 1 of print(_:separator:terminator:)
+  %201 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA0_ : $@convention(thin) () -> @owned String // user: %202
+  %202 = apply %201() : $@convention(thin) () -> @owned String // users: %208, %206
+  // function_ref default argument 2 of print(_:separator:terminator:)
+  %203 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA1_ : $@convention(thin) () -> @owned String // user: %204
+  %204 = apply %203() : $@convention(thin) () -> @owned String // users: %207, %206
+  // function_ref print(_:separator:terminator:)
+  %205 = function_ref @$ss5print_9separator10terminatoryypd_S2StF : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> () // user: %206
+  %206 = apply %205(%200, %202, %204) : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> ()
+  destroy_value %204 : $String                    // id: %207
+  destroy_value %202 : $String                    // id: %208
+  destroy_value %200 : $Array<Any>                // id: %209
+  end_borrow %164 : $String                       // id: %210
+  br bb23                                         // id: %211
+
+bb9:                                              // Preds: bb7
+  destroy_value %165 : $String                    // id: %212
+  br bb10                                         // id: %213
+
+bb10:                                             // Preds: bb9
+  %214 = copy_value %164 : $String                // users: %234, %261, %223
+  %215 = string_literal utf8 "-"                  // user: %220
+  %216 = integer_literal $Builtin.Word, 1         // user: %220
+  %217 = integer_literal $Builtin.Int1, -1        // user: %220
+  %218 = metatype $@thin String.Type              // user: %220
+  // function_ref String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+  %219 = function_ref @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %220
+  %220 = apply %219(%215, %216, %217, %218) : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %222
+  %221 = alloc_stack $String                      // users: %231, %230, %227, %222
+  store %220 to [init] %221 : $*String            // id: %222
+  %223 = begin_borrow %214 : $String              // users: %229, %225
+  %224 = alloc_stack $String                      // users: %228, %227, %225
+  %225 = store_borrow %223 to %224 : $*String
+  // function_ref ~= infix<A>(_:_:)
+  %226 = function_ref @$ss2teoiySbx_xtSQRzlF : $@convention(thin) <τ_0_0 where τ_0_0 : Equatable> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0) -> Bool // user: %227
+  %227 = apply %226<String>(%221, %224) : $@convention(thin) <τ_0_0 where τ_0_0 : Equatable> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0) -> Bool // user: %232
+  dealloc_stack %224 : $*String                   // id: %228
+  end_borrow %223 : $String                       // id: %229
+  destroy_addr %221 : $*String                    // id: %230
+  dealloc_stack %221 : $*String                   // id: %231
+  %232 = struct_extract %227 : $Bool, #Bool._value // user: %233
+  cond_br %232, bb11, bb12                        // id: %233
+
+bb11:                                             // Preds: bb10
+  destroy_value %214 : $String                    // id: %234
+  %235 = integer_literal $Builtin.Word, 1         // user: %237
+  // function_ref _allocateUninitializedArray<A>(_:)
+  %236 = function_ref @$ss27_allocateUninitializedArrayySayxG_BptBwlF : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %237
+  %237 = apply %236<Any>(%235) : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %238
+  (%238, %239) = destructure_tuple %237 : $(Array<Any>, Builtin.RawPointer) // users: %249, %240
+  %240 = pointer_to_address %239 : $Builtin.RawPointer to [strict] $*Any // user: %246
+  %241 = metatype $@thin Int.Type                 // user: %245
+  %242 = load [trivial] %79 : $*Int               // user: %245
+  %243 = load [trivial] %115 : $*Int              // user: %245
+  // function_ref static Int.- infix(_:_:)
+  %244 = function_ref @$sSi1soiyS2i_SitFZ : $@convention(method) (Int, Int, @thin Int.Type) -> Int // user: %245
+  %245 = apply %244(%242, %243, %241) : $@convention(method) (Int, Int, @thin Int.Type) -> Int // user: %247
+  %246 = init_existential_addr %240 : $*Any, $Int // user: %247
+  store %245 to [trivial] %246 : $*Int            // id: %247
+  // function_ref _finalizeUninitializedArray<A>(_:)
+  %248 = function_ref @$ss27_finalizeUninitializedArrayySayxGABnlF : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // user: %249
+  %249 = apply %248<Any>(%238) : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // users: %258, %255
+  // function_ref default argument 1 of print(_:separator:terminator:)
+  %250 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA0_ : $@convention(thin) () -> @owned String // user: %251
+  %251 = apply %250() : $@convention(thin) () -> @owned String // users: %257, %255
+  // function_ref default argument 2 of print(_:separator:terminator:)
+  %252 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA1_ : $@convention(thin) () -> @owned String // user: %253
+  %253 = apply %252() : $@convention(thin) () -> @owned String // users: %256, %255
+  // function_ref print(_:separator:terminator:)
+  %254 = function_ref @$ss5print_9separator10terminatoryypd_S2StF : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> () // user: %255
+  %255 = apply %254(%249, %251, %253) : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> ()
+  destroy_value %253 : $String                    // id: %256
+  destroy_value %251 : $String                    // id: %257
+  destroy_value %249 : $Array<Any>                // id: %258
+  end_borrow %164 : $String                       // id: %259
+  br bb23                                         // id: %260
+
+bb12:                                             // Preds: bb10
+  destroy_value %214 : $String                    // id: %261
+  br bb13                                         // id: %262
+
+bb13:                                             // Preds: bb12
+  %263 = copy_value %164 : $String                // users: %283, %310, %272
+  %264 = string_literal utf8 "*"                  // user: %269
+  %265 = integer_literal $Builtin.Word, 1         // user: %269
+  %266 = integer_literal $Builtin.Int1, -1        // user: %269
+  %267 = metatype $@thin String.Type              // user: %269
+  // function_ref String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+  %268 = function_ref @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %269
+  %269 = apply %268(%264, %265, %266, %267) : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %271
+  %270 = alloc_stack $String                      // users: %280, %279, %276, %271
+  store %269 to [init] %270 : $*String            // id: %271
+  %272 = begin_borrow %263 : $String              // users: %278, %274
+  %273 = alloc_stack $String                      // users: %277, %276, %274
+  %274 = store_borrow %272 to %273 : $*String
+  // function_ref ~= infix<A>(_:_:)
+  %275 = function_ref @$ss2teoiySbx_xtSQRzlF : $@convention(thin) <τ_0_0 where τ_0_0 : Equatable> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0) -> Bool // user: %276
+  %276 = apply %275<String>(%270, %273) : $@convention(thin) <τ_0_0 where τ_0_0 : Equatable> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0) -> Bool // user: %281
+  dealloc_stack %273 : $*String                   // id: %277
+  end_borrow %272 : $String                       // id: %278
+  destroy_addr %270 : $*String                    // id: %279
+  dealloc_stack %270 : $*String                   // id: %280
+  %281 = struct_extract %276 : $Bool, #Bool._value // user: %282
+  cond_br %281, bb14, bb15                        // id: %282
+
+bb14:                                             // Preds: bb13
+  destroy_value %263 : $String                    // id: %283
+  %284 = integer_literal $Builtin.Word, 1         // user: %286
+  // function_ref _allocateUninitializedArray<A>(_:)
+  %285 = function_ref @$ss27_allocateUninitializedArrayySayxG_BptBwlF : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %286
+  %286 = apply %285<Any>(%284) : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %287
+  (%287, %288) = destructure_tuple %286 : $(Array<Any>, Builtin.RawPointer) // users: %298, %289
+  %289 = pointer_to_address %288 : $Builtin.RawPointer to [strict] $*Any // user: %295
+  %290 = metatype $@thin Int.Type                 // user: %294
+  %291 = load [trivial] %79 : $*Int               // user: %294
+  %292 = load [trivial] %115 : $*Int              // user: %294
+  // function_ref static Int.* infix(_:_:)
+  %293 = function_ref @$sSi1moiyS2i_SitFZ : $@convention(method) (Int, Int, @thin Int.Type) -> Int // user: %294
+  %294 = apply %293(%291, %292, %290) : $@convention(method) (Int, Int, @thin Int.Type) -> Int // user: %296
+  %295 = init_existential_addr %289 : $*Any, $Int // user: %296
+  store %294 to [trivial] %295 : $*Int            // id: %296
+  // function_ref _finalizeUninitializedArray<A>(_:)
+  %297 = function_ref @$ss27_finalizeUninitializedArrayySayxGABnlF : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // user: %298
+  %298 = apply %297<Any>(%287) : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // users: %307, %304
+  // function_ref default argument 1 of print(_:separator:terminator:)
+  %299 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA0_ : $@convention(thin) () -> @owned String // user: %300
+  %300 = apply %299() : $@convention(thin) () -> @owned String // users: %306, %304
+  // function_ref default argument 2 of print(_:separator:terminator:)
+  %301 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA1_ : $@convention(thin) () -> @owned String // user: %302
+  %302 = apply %301() : $@convention(thin) () -> @owned String // users: %305, %304
+  // function_ref print(_:separator:terminator:)
+  %303 = function_ref @$ss5print_9separator10terminatoryypd_S2StF : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> () // user: %304
+  %304 = apply %303(%298, %300, %302) : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> ()
+  destroy_value %302 : $String                    // id: %305
+  destroy_value %300 : $String                    // id: %306
+  destroy_value %298 : $Array<Any>                // id: %307
+  end_borrow %164 : $String                       // id: %308
+  br bb23                                         // id: %309
+
+bb15:                                             // Preds: bb13
+  destroy_value %263 : $String                    // id: %310
+  br bb16                                         // id: %311
+
+bb16:                                             // Preds: bb15
+  %312 = copy_value %164 : $String                // users: %332, %396, %321
+  %313 = string_literal utf8 "/"                  // user: %318
+  %314 = integer_literal $Builtin.Word, 1         // user: %318
+  %315 = integer_literal $Builtin.Int1, -1        // user: %318
+  %316 = metatype $@thin String.Type              // user: %318
+  // function_ref String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+  %317 = function_ref @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %318
+  %318 = apply %317(%313, %314, %315, %316) : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %320
+  %319 = alloc_stack $String                      // users: %329, %328, %325, %320
+  store %318 to [init] %319 : $*String            // id: %320
+  %321 = begin_borrow %312 : $String              // users: %327, %323
+  %322 = alloc_stack $String                      // users: %326, %325, %323
+  %323 = store_borrow %321 to %322 : $*String
+  // function_ref ~= infix<A>(_:_:)
+  %324 = function_ref @$ss2teoiySbx_xtSQRzlF : $@convention(thin) <τ_0_0 where τ_0_0 : Equatable> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0) -> Bool // user: %325
+  %325 = apply %324<String>(%319, %322) : $@convention(thin) <τ_0_0 where τ_0_0 : Equatable> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0) -> Bool // user: %330
+  dealloc_stack %322 : $*String                   // id: %326
+  end_borrow %321 : $String                       // id: %327
+  destroy_addr %319 : $*String                    // id: %328
+  dealloc_stack %319 : $*String                   // id: %329
+  %330 = struct_extract %325 : $Bool, #Bool._value // user: %331
+  cond_br %330, bb17, bb21                        // id: %331
+
+bb17:                                             // Preds: bb16
+  destroy_value %312 : $String                    // id: %332
+  %333 = metatype $@thin Int.Type                 // user: %340
+  %334 = load [trivial] %115 : $*Int              // user: %340
+  %335 = integer_literal $Builtin.IntLiteral, 0   // user: %338
+  %336 = metatype $@thin Int.Type                 // user: %338
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %337 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %338
+  %338 = apply %337(%335, %336) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %340
+  // function_ref static Int.== infix(_:_:)
+  %339 = function_ref @$sSi2eeoiySbSi_SitFZ : $@convention(method) (Int, Int, @thin Int.Type) -> Bool // user: %340
+  %340 = apply %339(%334, %338, %333) : $@convention(method) (Int, Int, @thin Int.Type) -> Bool // user: %341
+  %341 = struct_extract %340 : $Bool, #Bool._value // user: %342
+  cond_br %341, bb18, bb19                        // id: %342
+
+bb18:                                             // Preds: bb17
+  %343 = integer_literal $Builtin.Word, 1         // user: %345
+  // function_ref _allocateUninitializedArray<A>(_:)
+  %344 = function_ref @$ss27_allocateUninitializedArrayySayxG_BptBwlF : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %345
+  %345 = apply %344<Any>(%343) : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %346
+  (%346, %347) = destructure_tuple %345 : $(Array<Any>, Builtin.RawPointer) // users: %358, %348
+  %348 = pointer_to_address %347 : $Builtin.RawPointer to [strict] $*Any // user: %355
+  %349 = string_literal utf8 "ERROR: operand2 being 0 causes a division by 0 error" // user: %354
+  %350 = integer_literal $Builtin.Word, 52        // user: %354
+  %351 = integer_literal $Builtin.Int1, -1        // user: %354
+  %352 = metatype $@thin String.Type              // user: %354
+  // function_ref String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+  %353 = function_ref @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %354
+  %354 = apply %353(%349, %350, %351, %352) : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %356
+  %355 = init_existential_addr %348 : $*Any, $String // user: %356
+  store %354 to [init] %355 : $*String            // id: %356
+  // function_ref _finalizeUninitializedArray<A>(_:)
+  %357 = function_ref @$ss27_finalizeUninitializedArrayySayxGABnlF : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // user: %358
+  %358 = apply %357<Any>(%346) : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // users: %367, %364
+  // function_ref default argument 1 of print(_:separator:terminator:)
+  %359 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA0_ : $@convention(thin) () -> @owned String // user: %360
+  %360 = apply %359() : $@convention(thin) () -> @owned String // users: %366, %364
+  // function_ref default argument 2 of print(_:separator:terminator:)
+  %361 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA1_ : $@convention(thin) () -> @owned String // user: %362
+  %362 = apply %361() : $@convention(thin) () -> @owned String // users: %365, %364
+  // function_ref print(_:separator:terminator:)
+  %363 = function_ref @$ss5print_9separator10terminatoryypd_S2StF : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> () // user: %364
+  %364 = apply %363(%358, %360, %362) : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> ()
+  destroy_value %362 : $String                    // id: %365
+  destroy_value %360 : $String                    // id: %366
+  destroy_value %358 : $Array<Any>                // id: %367
+  br bb20                                         // id: %368
+
+bb19:                                             // Preds: bb17
+  br bb20                                         // id: %369
+
+bb20:                                             // Preds: bb18 bb19
+  %370 = integer_literal $Builtin.Word, 1         // user: %372
+  // function_ref _allocateUninitializedArray<A>(_:)
+  %371 = function_ref @$ss27_allocateUninitializedArrayySayxG_BptBwlF : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %372
+  %372 = apply %371<Any>(%370) : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %373
+  (%373, %374) = destructure_tuple %372 : $(Array<Any>, Builtin.RawPointer) // users: %384, %375
+  %375 = pointer_to_address %374 : $Builtin.RawPointer to [strict] $*Any // user: %381
+  %376 = metatype $@thin Int.Type                 // user: %380
+  %377 = load [trivial] %79 : $*Int               // user: %380
+  %378 = load [trivial] %115 : $*Int              // user: %380
+  // function_ref static Int./ infix(_:_:)
+  %379 = function_ref @$sSi1doiyS2i_SitFZ : $@convention(method) (Int, Int, @thin Int.Type) -> Int // user: %380
+  %380 = apply %379(%377, %378, %376) : $@convention(method) (Int, Int, @thin Int.Type) -> Int // user: %382
+  %381 = init_existential_addr %375 : $*Any, $Int // user: %382
+  store %380 to [trivial] %381 : $*Int            // id: %382
+  // function_ref _finalizeUninitializedArray<A>(_:)
+  %383 = function_ref @$ss27_finalizeUninitializedArrayySayxGABnlF : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // user: %384
+  %384 = apply %383<Any>(%373) : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // users: %393, %390
+  // function_ref default argument 1 of print(_:separator:terminator:)
+  %385 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA0_ : $@convention(thin) () -> @owned String // user: %386
+  %386 = apply %385() : $@convention(thin) () -> @owned String // users: %392, %390
+  // function_ref default argument 2 of print(_:separator:terminator:)
+  %387 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA1_ : $@convention(thin) () -> @owned String // user: %388
+  %388 = apply %387() : $@convention(thin) () -> @owned String // users: %391, %390
+  // function_ref print(_:separator:terminator:)
+  %389 = function_ref @$ss5print_9separator10terminatoryypd_S2StF : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> () // user: %390
+  %390 = apply %389(%384, %386, %388) : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> ()
+  destroy_value %388 : $String                    // id: %391
+  destroy_value %386 : $String                    // id: %392
+  destroy_value %384 : $Array<Any>                // id: %393
+  end_borrow %164 : $String                       // id: %394
+  br bb23                                         // id: %395
+
+bb21:                                             // Preds: bb16
+  destroy_value %312 : $String                    // id: %396
+  br bb22                                         // id: %397
+
+bb22:                                             // Preds: bb21
+  %398 = integer_literal $Builtin.Word, 1         // user: %400
+  // function_ref _allocateUninitializedArray<A>(_:)
+  %399 = function_ref @$ss27_allocateUninitializedArrayySayxG_BptBwlF : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %400
+  %400 = apply %399<Any>(%398) : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer) // user: %401
+  (%401, %402) = destructure_tuple %400 : $(Array<Any>, Builtin.RawPointer) // users: %457, %403
+  %403 = pointer_to_address %402 : $Builtin.RawPointer to [strict] $*Any // user: %454
+  %404 = alloc_box ${ var DefaultStringInterpolation }, var, name "$interpolation" // users: %450, %405
+  %405 = project_box %404 : ${ var DefaultStringInterpolation }, 0 // users: %449, %444, %432, %424, %417
+  %406 = integer_literal $Builtin.IntLiteral, 37  // user: %409
+  %407 = metatype $@thin Int.Type                 // user: %409
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %408 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %409
+  %409 = apply %408(%406, %407) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %416
+  %410 = integer_literal $Builtin.IntLiteral, 1   // user: %413
+  %411 = metatype $@thin Int.Type                 // user: %413
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %412 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %413
+  %413 = apply %412(%410, %411) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %416
+  %414 = metatype $@thin DefaultStringInterpolation.Type // user: %416
+  // function_ref DefaultStringInterpolation.init(literalCapacity:interpolationCount:)
+  %415 = function_ref @$ss26DefaultStringInterpolationV15literalCapacity18interpolationCountABSi_SitcfC : $@convention(method) (Int, Int, @thin DefaultStringInterpolation.Type) -> @owned DefaultStringInterpolation // user: %416
+  %416 = apply %415(%409, %413, %414) : $@convention(method) (Int, Int, @thin DefaultStringInterpolation.Type) -> @owned DefaultStringInterpolation // user: %417
+  store %416 to [init] %405 : $*DefaultStringInterpolation // id: %417
+  %418 = string_literal utf8 "ERROR: \""          // user: %423
+  %419 = integer_literal $Builtin.Word, 8         // user: %423
+  %420 = integer_literal $Builtin.Int1, -1        // user: %423
+  %421 = metatype $@thin String.Type              // user: %423
+  // function_ref String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+  %422 = function_ref @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %423
+  %423 = apply %422(%418, %419, %420, %421) : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // users: %428, %426
+  %424 = begin_access [modify] [unknown] %405 : $*DefaultStringInterpolation // users: %427, %426
+  // function_ref DefaultStringInterpolation.appendLiteral(_:)
+  %425 = function_ref @$ss26DefaultStringInterpolationV13appendLiteralyySSF : $@convention(method) (@guaranteed String, @inout DefaultStringInterpolation) -> () // user: %426
+  %426 = apply %425(%423, %424) : $@convention(method) (@guaranteed String, @inout DefaultStringInterpolation) -> ()
+  end_access %424 : $*DefaultStringInterpolation  // id: %427
+  destroy_value %423 : $String                    // id: %428
+  %429 = load_borrow %151 : $*String              // users: %437, %431
+  %430 = alloc_stack $String                      // users: %436, %434, %431
+  %431 = store_borrow %429 to %430 : $*String
+  %432 = begin_access [modify] [unknown] %405 : $*DefaultStringInterpolation // users: %435, %434
+  // function_ref DefaultStringInterpolation.appendInterpolation<A>(_:)
+  %433 = function_ref @$ss26DefaultStringInterpolationV06appendC0yyxs06CustomB11ConvertibleRzs20TextOutputStreamableRzlF : $@convention(method) <τ_0_0 where τ_0_0 : CustomStringConvertible, τ_0_0 : TextOutputStreamable> (@in_guaranteed τ_0_0, @inout DefaultStringInterpolation) -> () // user: %434
+  %434 = apply %433<String>(%430, %432) : $@convention(method) <τ_0_0 where τ_0_0 : CustomStringConvertible, τ_0_0 : TextOutputStreamable> (@in_guaranteed τ_0_0, @inout DefaultStringInterpolation) -> ()
+  end_access %432 : $*DefaultStringInterpolation  // id: %435
+  dealloc_stack %430 : $*String                   // id: %436
+  end_borrow %429 : $String                       // id: %437
+  %438 = string_literal utf8 "\" is not a supported operator" // user: %443
+  %439 = integer_literal $Builtin.Word, 29        // user: %443
+  %440 = integer_literal $Builtin.Int1, -1        // user: %443
+  %441 = metatype $@thin String.Type              // user: %443
+  // function_ref String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+  %442 = function_ref @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // user: %443
+  %443 = apply %442(%438, %439, %440, %441) : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String // users: %448, %446
+  %444 = begin_access [modify] [unknown] %405 : $*DefaultStringInterpolation // users: %447, %446
+  // function_ref DefaultStringInterpolation.appendLiteral(_:)
+  %445 = function_ref @$ss26DefaultStringInterpolationV13appendLiteralyySSF : $@convention(method) (@guaranteed String, @inout DefaultStringInterpolation) -> () // user: %446
+  %446 = apply %445(%443, %444) : $@convention(method) (@guaranteed String, @inout DefaultStringInterpolation) -> ()
+  end_access %444 : $*DefaultStringInterpolation  // id: %447
+  destroy_value %443 : $String                    // id: %448
+  %449 = load [copy] %405 : $*DefaultStringInterpolation // user: %453
+  destroy_value %404 : ${ var DefaultStringInterpolation } // id: %450
+  %451 = metatype $@thin String.Type              // user: %453
+  // function_ref String.init(stringInterpolation:)
+  %452 = function_ref @$sSS19stringInterpolationSSs013DefaultStringB0V_tcfC : $@convention(method) (@owned DefaultStringInterpolation, @thin String.Type) -> @owned String // user: %453
+  %453 = apply %452(%449, %451) : $@convention(method) (@owned DefaultStringInterpolation, @thin String.Type) -> @owned String // user: %455
+  %454 = init_existential_addr %403 : $*Any, $String // user: %455
+  store %453 to [init] %454 : $*String            // id: %455
+  // function_ref _finalizeUninitializedArray<A>(_:)
+  %456 = function_ref @$ss27_finalizeUninitializedArrayySayxGABnlF : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // user: %457
+  %457 = apply %456<Any>(%401) : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0> // users: %466, %463
+  // function_ref default argument 1 of print(_:separator:terminator:)
+  %458 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA0_ : $@convention(thin) () -> @owned String // user: %459
+  %459 = apply %458() : $@convention(thin) () -> @owned String // users: %465, %463
+  // function_ref default argument 2 of print(_:separator:terminator:)
+  %460 = function_ref @$ss5print_9separator10terminatoryypd_S2StFfA1_ : $@convention(thin) () -> @owned String // user: %461
+  %461 = apply %460() : $@convention(thin) () -> @owned String // users: %464, %463
+  // function_ref print(_:separator:terminator:)
+  %462 = function_ref @$ss5print_9separator10terminatoryypd_S2StF : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> () // user: %463
+  %463 = apply %462(%457, %459, %461) : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> ()
+  destroy_value %461 : $String                    // id: %464
+  destroy_value %459 : $String                    // id: %465
+  destroy_value %457 : $Array<Any>                // id: %466
+  end_borrow %164 : $String                       // id: %467
+  br bb23                                         // id: %468
+
+bb23:                                             // Preds: bb22 bb20 bb14 bb11 bb8
+  %469 = integer_literal $Builtin.Int32, 0        // user: %470
+  %470 = struct $Int32 (%469 : $Builtin.Int32)    // user: %471
+  return %470 : $Int32                            // id: %471
+} // end sil function 'main'
+
+// static CommandLine.arguments.getter
+sil @$ss11CommandLineO9argumentsSaySSGvgZ : $@convention(method) (@thin CommandLine.Type) -> @owned Array<String>
+
+// Array.count.getter
+sil [serialized] @$sSa5countSivg : $@convention(method) <τ_0_0> (@guaranteed Array<τ_0_0>) -> Int
+
+// Int.init(_builtinIntegerLiteral:)
+sil [transparent] [serialized] @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int
+
+// static BinaryInteger.!= infix(_:_:)
+sil [transparent] [serialized] @$sSzsE2neoiySbx_xtFZ : $@convention(method) <τ_0_0 where τ_0_0 : BinaryInteger> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0, @thick τ_0_0.Type) -> Bool
+
+// _allocateUninitializedArray<A>(_:)
+sil [serialized] [always_inline] [_semantics "array.uninitialized_intrinsic"] @$ss27_allocateUninitializedArrayySayxG_BptBwlF : $@convention(thin) <τ_0_0> (Builtin.Word) -> (@owned Array<τ_0_0>, Builtin.RawPointer)
+
+// String.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:)
+sil [serialized] [always_inline] [readonly] [_semantics "string.makeUTF8"] @$sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC : $@convention(method) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, @thin String.Type) -> @owned String
+
+// _finalizeUninitializedArray<A>(_:)
+sil hidden_external [serialized] [_semantics "array.finalize_intrinsic"] @$ss27_finalizeUninitializedArrayySayxGABnlF : $@convention(thin) <τ_0_0> (@owned Array<τ_0_0>) -> @owned Array<τ_0_0>
+
+// default argument 1 of print(_:separator:terminator:)
+sil hidden_external [serialized] @$ss5print_9separator10terminatoryypd_S2StFfA0_ : $@convention(thin) () -> @owned String
+
+// default argument 2 of print(_:separator:terminator:)
+sil hidden_external [serialized] @$ss5print_9separator10terminatoryypd_S2StFfA1_ : $@convention(thin) () -> @owned String
+
+// print(_:separator:terminator:)
+sil @$ss5print_9separator10terminatoryypd_S2StF : $@convention(thin) (@guaranteed Array<Any>, @guaranteed String, @guaranteed String) -> ()
+
+// Array.subscript.getter
+sil [serialized] @$sSayxSicig : $@convention(method) <τ_0_0> (Int, @guaranteed Array<τ_0_0>) -> @out τ_0_0
+
+// FixedWidthInteger.init(_:)
+sil [serialized] [always_inline] @$ss17FixedWidthIntegerPsEyxSgSScfC : $@convention(method) <τ_0_0 where τ_0_0 : FixedWidthInteger> (@owned String, @thick τ_0_0.Type) -> @out Optional<τ_0_0>
+
+// _diagnoseUnexpectedNilOptional(_filenameStart:_filenameLength:_filenameIsASCII:_line:_isImplicitUnwrap:)
+sil [transparent] [serialized] @$ss30_diagnoseUnexpectedNilOptional14_filenameStart01_E6Length01_E7IsASCII5_line17_isImplicitUnwrapyBp_BwBi1_BwBi1_tF : $@convention(thin) (Builtin.RawPointer, Builtin.Word, Builtin.Int1, Builtin.Word, Builtin.Int1) -> ()
+
+// ~= infix<A>(_:_:)
+sil [transparent] [serialized] @$ss2teoiySbx_xtSQRzlF : $@convention(thin) <τ_0_0 where τ_0_0 : Equatable> (@in_guaranteed τ_0_0, @in_guaranteed τ_0_0) -> Bool
+
+// static Int.+ infix(_:_:)
+sil [transparent] [serialized] @$sSi1poiyS2i_SitFZ : $@convention(method) (Int, Int, @thin Int.Type) -> Int
+
+// static Int.- infix(_:_:)
+sil [transparent] [serialized] @$sSi1soiyS2i_SitFZ : $@convention(method) (Int, Int, @thin Int.Type) -> Int
+
+// static Int.* infix(_:_:)
+sil [transparent] [serialized] @$sSi1moiyS2i_SitFZ : $@convention(method) (Int, Int, @thin Int.Type) -> Int
+
+// static Int.== infix(_:_:)
+sil [transparent] [serialized] @$sSi2eeoiySbSi_SitFZ : $@convention(method) (Int, Int, @thin Int.Type) -> Bool
+
+// static Int./ infix(_:_:)
+sil [transparent] [serialized] @$sSi1doiyS2i_SitFZ : $@convention(method) (Int, Int, @thin Int.Type) -> Int
+
+// DefaultStringInterpolation.init(literalCapacity:interpolationCount:)
+sil [serialized] @$ss26DefaultStringInterpolationV15literalCapacity18interpolationCountABSi_SitcfC : $@convention(method) (Int, Int, @thin DefaultStringInterpolation.Type) -> @owned DefaultStringInterpolation
+
+// DefaultStringInterpolation.appendLiteral(_:)
+sil [serialized] @$ss26DefaultStringInterpolationV13appendLiteralyySSF : $@convention(method) (@guaranteed String, @inout DefaultStringInterpolation) -> ()
+
+// DefaultStringInterpolation.appendInterpolation<A>(_:)
+sil [serialized] @$ss26DefaultStringInterpolationV06appendC0yyxs06CustomB11ConvertibleRzs20TextOutputStreamableRzlF : $@convention(method) <τ_0_0 where τ_0_0 : CustomStringConvertible, τ_0_0 : TextOutputStreamable> (@in_guaranteed τ_0_0, @inout DefaultStringInterpolation) -> ()
+
+// String.init(stringInterpolation:)
+sil [serialized] [readonly] @$sSS19stringInterpolationSSs013DefaultStringB0V_tcfC : $@convention(method) (@owned DefaultStringInterpolation, @thin String.Type) -> @owned String
+
+
+
+// Mappings from '#fileID' to '#filePath':
+//   'calc/calc.swift' => '../../../swift/test/SILAlive/calc.swift'
+
+

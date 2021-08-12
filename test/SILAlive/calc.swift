@@ -12,14 +12,14 @@ switch op {
 case "+":
 	print(operand1 + operand2)
 case "-":
-        print(operand1 - operand2)
+	print(operand1 - operand2)
 case "*":
-        print(operand1 * operand2)
+	print(operand1 * operand2)
 case "/":
 	if (operand2 == 0) {
 		print("ERROR: operand2 being 0 causes a division by 0 error")
 	}
-        print(operand1 / operand2)
+  print(operand1 / operand2)
 default:
 	print("ERROR: \"\(op)\" is not a supported operator")
 }
