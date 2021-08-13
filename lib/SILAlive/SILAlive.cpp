@@ -171,21 +171,44 @@ std::unique_ptr<AliveModule> aliveIRGen(SILModule &SILMod) {
   return aliveIRGen(std::move(generatedModule));
 }
 
+void reportAliveError(const util::Errors &errors) {
+  std::cout << std::endl << "*** SILAlive ***" << std::endl;
+  std::cout << "--- " << "ERRORS: " << errors << std::endl;
+  std::cout << "*** SILAlive ***" << std::endl << std::endl;
+}
+
+void reportRefined(const std::string &functionName) {
+  std::cout << std::endl << "*** SILAlive ***" << std::endl;
+  std::cout << "--- " << "REFINED: " << functionName << std::endl;
+  std::cout << "*** SILAlive ***" << std::endl << std::endl;
+}
+
 void translationValidationFunction(IR::Function func1, IR::Function func2, 
       smt::smt_initializer smt_init) {
   smt_init.reset();
+
+  auto functionName = func1.getName();
+
   tools::Transform transform{"transform", std::move(func1), std::move(func2)};
   tools::TransformVerify transformVerify{transform, false};
-  std::cout << transformVerify.verify() << std::endl;
+  auto errors = transformVerify.verify();
+
+  if (errors) {
+    reportAliveError(errors);
+  } else {
+    reportRefined(functionName);
+  }
 }
 
 void reportUnmatchedFunction(IR::Function &func) {
   // FIXME: Remove use of `std::cout`.
   // The fundamental problem is figuring out how to print the `IR::Function`
 
-  std::cout << "\n--- (" << func.getName()
-      << ") : no matching function in target. \n";
-  std::cout << func << "\n";
+  std::cout << std::endl << "*** SILAlive ***" << std::endl;
+  std::cout << std::endl << "--- " << "NO MATCHING FUNCTION IN TARGET: " 
+      << func.getName() << std::endl;
+  std::cout << func << std::endl;
+  std::cout << "*** SILAlive ***" << std::endl << std::endl;
 }
 
 void translationValidation(std::unique_ptr<AliveModule> mod1, 
@@ -238,6 +261,11 @@ void translationValidation(std::unique_ptr<AliveModule> mod1,
 }
 
 bool translationValidationOptimizationPass(SILModule &SILMod) {
+  if (SILMod.getStage() == SILStage::Canonical || 
+      SILMod.getStage() == SILStage::Lowered) {
+    return true;
+  }
+
   auto aliveModule = aliveIRGen(SILMod);
   assert(aliveModule && "Cannot use `nullptr` `aliveModule`");
 
