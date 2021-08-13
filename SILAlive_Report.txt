@@ -1,0 +1,1539 @@
+
+*** SILAlive ***
+--- REFINED: foldFPToUInt8UsingDouble
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToFloat
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToDouble
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToFloat2
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i64 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define double @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i64 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i8 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define float @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define float @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToUInt8UsingDouble
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToFloat
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToDouble
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToFloat2
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i64 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define double @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i64 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i8 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define float @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define float @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt8
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPFractionToInt8
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt8Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt16
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFP2ToInt16
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt16Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt32
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt32Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldDoubleToFloat
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldDoubleToFloat2
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i16 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i8 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i16 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i64 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i64 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i8 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define float @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define float @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i16 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i8 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt8
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPFractionToInt8
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt8Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: assert_configuration
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: assert_configuration
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: assert_configuration
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: main
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: $s20pound_assert_removed14builtinRemovedyyF
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define void @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foo
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: bar
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define void @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define void @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: main
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToUInt8UsingDouble
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToFloat
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt8
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPFractionToInt8
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt8Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt16
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFP2ToInt16
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt16Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt32
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt32Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldDoubleToFloat
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldDoubleToFloat2
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i16 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i8 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i16 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i64 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i64 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i8 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define float @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define float @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i16 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i8 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt8
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPFractionToInt8
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt8Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt16
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFP2ToInt16
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt16Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt32
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: assert_configuration
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: assert_configuration
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: assert_configuration
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: main
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: $s20pound_assert_removed14builtinRemovedyyF
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define void @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foo
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: bar
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define void @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define void @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt8
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPFractionToInt8
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt8Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt16
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFP2ToInt16
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt16Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt32
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt32Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldDoubleToFloat
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldDoubleToFloat2
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i16 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i8 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i16 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i64 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i64 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i8 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define float @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define float @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i16 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i8 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: assert_configuration
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: assert_configuration
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: assert_configuration
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: main
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: $s20pound_assert_removed14builtinRemovedyyF
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define void @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToUInt8UsingDouble
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToFloat
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToDouble
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToFloat2
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i64 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define double @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i64 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i8 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define float @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define float @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToUInt8UsingDouble
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToFloat
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToDouble
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToFloat2
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i64 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define double @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i64 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i8 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define float @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define float @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foo
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: bar
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define void @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define void @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToUInt8UsingDouble
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToFloat
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToDouble
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToFloat2
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i64 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define double @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i64 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i8 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define float @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define float @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToUInt8UsingDouble
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToFloat
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToDouble
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFloat80ToFloat2
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i64 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define double @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i64 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i8 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define float @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define float @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: assert_configuration
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt8
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPFractionToInt8
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt8Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: assert_configuration
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt16
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFP2ToInt16
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt16Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt32
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: assert_configuration
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt32Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldFPToInt64Unsigned
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foldDoubleToFloat
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: foo
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: bar
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define void @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define void @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: main
+*** SILAlive ***
+
+
+*** SILAlive ***
+--- REFINED: $s20pound_assert_removed14builtinRemovedyyF
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define i32 @() {
+}
+
+*** SILAlive ***
+
+
+*** SILAlive ***
+
+--- NO MATCHING FUNCTION IN TARGET: 
+define void @() {
+}
+
+*** SILAlive ***
+

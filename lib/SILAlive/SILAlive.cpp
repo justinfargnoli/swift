@@ -23,9 +23,11 @@
 #include "llvm_util/llvm2alive.h"
 #include "smt/smt.h"
 #include "tools/transform.h"
-#include <iostream>
+#include <fstream>
 
 namespace swift {
+
+std::ofstream outAlive;
 
 void AliveModule::pushFunction(std::unique_ptr<IR::Function> function) {
   assert(function && "Cannot add a `nullptr` `IR::Function`");
@@ -115,7 +117,7 @@ std::unique_ptr<IR::Function> aliveIRFunctionGen(llvm::Function &F,
       const llvm::DataLayout &dataLayout, 
       llvm::Triple triple) {
   // Initialize llvm_util
-  llvm_util::initializer llvm_util_init{std::cout, dataLayout};
+  llvm_util::initializer llvm_util_init{outAlive, dataLayout};
 
   // Compute the names of the global variables used in `F`
   // std::vector<std::string> globalVarNames{};
@@ -172,15 +174,15 @@ std::unique_ptr<AliveModule> aliveIRGen(SILModule &SILMod) {
 }
 
 void reportAliveError(const util::Errors &errors) {
-  std::cout << std::endl << "*** SILAlive ***" << std::endl;
-  std::cout << "--- " << "ERRORS: " << errors << std::endl;
-  std::cout << "*** SILAlive ***" << std::endl << std::endl;
+  outAlive << std::endl << "*** SILAlive ***" << std::endl;
+  outAlive << "--- " << "ERRORS: " << errors << std::endl;
+  outAlive << "*** SILAlive ***" << std::endl << std::endl;
 }
 
 void reportRefined(const std::string &functionName) {
-  std::cout << std::endl << "*** SILAlive ***" << std::endl;
-  std::cout << "--- " << "REFINED: " << functionName << std::endl;
-  std::cout << "*** SILAlive ***" << std::endl << std::endl;
+  outAlive << std::endl << "*** SILAlive ***" << std::endl;
+  outAlive << "--- " << "REFINED: " << functionName << std::endl;
+  outAlive << "*** SILAlive ***" << std::endl << std::endl;
 }
 
 void translationValidationFunction(IR::Function func1, IR::Function func2, 
@@ -201,14 +203,14 @@ void translationValidationFunction(IR::Function func1, IR::Function func2,
 }
 
 void reportUnmatchedFunction(IR::Function &func) {
-  // FIXME: Remove use of `std::cout`.
+  // FIXME: Remove use of `outAlive`.
   // The fundamental problem is figuring out how to print the `IR::Function`
 
-  std::cout << std::endl << "*** SILAlive ***" << std::endl;
-  std::cout << std::endl << "--- " << "NO MATCHING FUNCTION IN TARGET: " 
+  outAlive << std::endl << "*** SILAlive ***" << std::endl;
+  outAlive << std::endl << "--- " << "NO MATCHING FUNCTION IN TARGET: " 
       << func.getName() << std::endl;
-  std::cout << func << std::endl;
-  std::cout << "*** SILAlive ***" << std::endl << std::endl;
+  outAlive << func << std::endl;
+  outAlive << "*** SILAlive ***" << std::endl << std::endl;
 }
 
 void translationValidation(std::unique_ptr<AliveModule> mod1, 
@@ -219,6 +221,10 @@ void translationValidation(std::unique_ptr<AliveModule> mod1,
     auto result = mod2Map.try_emplace((*func)->getName(), std::move(*func));
     assert(result.second && "Multiple functions in `mod2` have the same name!");
   }
+
+  // Open file used to report the output of SILAlive
+  // FIXME: Don't make the dependent on my system
+  outAlive.open("/Users/justinfargnoli/Documents/projects/sil-alive/swift-project/swift/SILAlive_Report.txt", std::ios_base::app);
 
   {
     // Initialize the SMT solver that Alive uses
@@ -258,6 +264,8 @@ void translationValidation(std::unique_ptr<AliveModule> mod1,
   for (auto func = mod2Map.begin(); func != mod2Map.end(); ++func) {
     reportUnmatchedFunction(*func->getValue());
   }
+
+  outAlive.close();
 }
 
 bool translationValidationOptimizationPass(SILModule &SILMod) {

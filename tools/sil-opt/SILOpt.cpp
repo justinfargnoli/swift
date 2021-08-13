@@ -327,6 +327,9 @@ static llvm::cl::opt<bool>
 static void runCommandLineSelectedPasses(SILModule *Module,
                                          irgen::IRGenModule *IRGenMod) {
   auto &opts = Module->getOptions();
+  if (not Passes.empty() && Passes.front() == PassKind::TranslationValidation) {
+    Passes.push_back(PassKind::TranslationValidation);
+  }
   executePassPipelinePlan(
       Module, SILPassPipelinePlan::getPassPipelineForKinds(opts, Passes),
       /*isMandatory*/ false, IRGenMod);
