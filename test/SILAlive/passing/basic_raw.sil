@@ -1,0 +1,48 @@
+sil_stage raw
+
+import Builtin
+import Swift
+import SwiftShims
+
+@_hasStorage @_hasInitialValue let x: Int { get }
+
+// x
+sil_global hidden [let] @$s5basic1xSivp : $Int
+
+// main
+sil [ossa] @main : $@convention(c) (Int32, UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>) -> Int32 {
+bb0(%0 : $Int32, %1 : $UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>):
+  alloc_global @$s5basic1xSivp                    // id: %2
+  %3 = global_addr @$s5basic1xSivp : $*Int        // user: %15
+  %4 = metatype $@thin Int.Type                   // user: %14
+  %5 = integer_literal $Builtin.IntLiteral, 1     // user: %8
+  %6 = metatype $@thin Int.Type                   // user: %8
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %7 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %8
+  %8 = apply %7(%5, %6) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %14
+  %9 = integer_literal $Builtin.IntLiteral, 1     // user: %12
+  %10 = metatype $@thin Int.Type                  // user: %12
+  // function_ref Int.init(_builtinIntegerLiteral:)
+  %11 = function_ref @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %12
+  %12 = apply %11(%9, %10) : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int // user: %14
+  // function_ref static Int.+ infix(_:_:)
+  %13 = function_ref @$sSi1poiyS2i_SitFZ : $@convention(method) (Int, Int, @thin Int.Type) -> Int // user: %14
+  %14 = apply %13(%8, %12, %4) : $@convention(method) (Int, Int, @thin Int.Type) -> Int // user: %15
+  store %14 to [trivial] %3 : $*Int               // id: %15
+  %16 = integer_literal $Builtin.Int32, 0         // user: %17
+  %17 = struct $Int32 (%16 : $Builtin.Int32)      // user: %18
+  return %17 : $Int32                             // id: %18
+} // end sil function 'main'
+
+// Int.init(_builtinIntegerLiteral:)
+sil [transparent] [serialized] @$sSi22_builtinIntegerLiteralSiBI_tcfC : $@convention(method) (Builtin.IntLiteral, @thin Int.Type) -> Int
+
+// static Int.+ infix(_:_:)
+sil [transparent] [serialized] @$sSi1poiyS2i_SitFZ : $@convention(method) (Int, Int, @thin Int.Type) -> Int
+
+
+
+// Mappings from '#fileID' to '#filePath':
+//   'basic/basic.swift' => '../../../swift/test/SILAlive/basic.swift'
+
+
