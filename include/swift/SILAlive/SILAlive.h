@@ -18,6 +18,9 @@
 
 namespace swift {
 
+void translationValidation(std::unique_ptr<SILModule> mod1,
+                           std::unique_ptr<SILModule> mod2);
+
 bool translationValidationOptimizationPass(SILModule &SILMod);
 
 } 

@@ -160,6 +160,13 @@ std::unique_ptr<AliveModule> aliveIRGen(GeneratedModule generatedModule) {
   return aliveModule;
 }
 
+std::unique_ptr<AliveModule> aliveIRGen(std::unique_ptr<SILModule> SILMod) {
+  // Generate LLVM IR for the SILModule
+  auto generatedModule = genLLVMIR(std::move(SILMod));
+  assert(generatedModule.getModule() && "IR module generation failed.");
+  return aliveIRGen(std::move(generatedModule));
+}
+
 std::unique_ptr<AliveModule> aliveIRGen(SILModule &SILMod) {
   // Clone the SIL Module
   auto SILModClone = cloneModule(SILMod);
@@ -262,6 +269,12 @@ void translationValidation(std::unique_ptr<AliveModule> mod1,
   }
 
   std::cout << std::endl << "### SILAlive ###" << std::endl << std::endl;
+}
+
+void translationValidation(std::unique_ptr<SILModule> mod1, 
+      std::unique_ptr<SILModule> mod2) {
+  translationValidation(aliveIRGen(std::move(mod1)), 
+      aliveIRGen(std::move(mod2)));
 }
 
 bool translationValidationOptimizationPass(SILModule &SILMod) {

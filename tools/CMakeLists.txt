@@ -15,6 +15,7 @@ endif()
 
 add_swift_tool_subdirectory(driver)
 add_swift_tool_subdirectory(sil-opt)
+add_swift_tool_subdirectory(sil-alive)
 add_swift_tool_subdirectory(swift-dependency-tool)
 add_swift_tool_subdirectory(swift-demangle)
 add_swift_tool_subdirectory(swift-demangle-yamldump)
