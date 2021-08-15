@@ -273,8 +273,9 @@ void translationValidation(std::unique_ptr<AliveModule> mod1,
 
 void translationValidation(std::unique_ptr<SILModule> mod1, 
       std::unique_ptr<SILModule> mod2) {
-  translationValidation(aliveIRGen(std::move(mod1)), 
-      aliveIRGen(std::move(mod2)));
+  auto aliveMod1 = aliveIRGen(std::move(mod1));
+  auto aliveMod2 = aliveIRGen(std::move(mod2));
+  translationValidation(std::move(aliveMod1), std::move(aliveMod2));
 }
 
 bool translationValidationOptimizationPass(SILModule &SILMod) {
